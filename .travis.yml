@@ -2,7 +2,7 @@ language: java
 jdk: - openjdk8
 addons:
 sonarcloud:
-organization: CecBazinga
+organization: cecbazinga
 token: travis encrypt f95331508670f3792dc071f93bcf5cc25a67ada3
 script:
 - ant build
