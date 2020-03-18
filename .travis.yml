@@ -3,7 +3,7 @@ jdk: - openjdk8
 addons:
 sonarcloud:
 organization: CecBazinga
-token: travis encrypt f95331508670f3792dc071f93bcf5cc25a67ada3
+token: travis encrypt b9866418e8defe2754759e5623bdadde2fbdf2ef
 script:
 - ant build
 - sonar-scanner
