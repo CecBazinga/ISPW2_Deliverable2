@@ -1,12 +1,25 @@
 package logic;
 
+
+import java.util.logging.Logger;
+import java.io.IOException;
+import java.util.logging.FileHandler;
+
+
 public class HelloWorld {
 	
-	public void hello() {
+	private static Logger logger;
+	
+	public void hello() throws SecurityException, IOException {
 		
 		//Hello world print
 		
-		System.out.println("This is the real hello world!");
+		boolean append = true;
+        FileHandler handler = new FileHandler("default.log", append);
+        
+		logger = Logger.getLogger(HelloWorld.class.getName());
+		logger.addHandler(handler);
+		logger.info("This is the real Hello Wolrd ! ");
 		
 	}
 
