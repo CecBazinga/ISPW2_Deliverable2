@@ -1,10 +1,9 @@
 package logic;
 
-import java.io.IOException;
 
 public class Main {
 
-	public static void main(String[] args) throws SecurityException, IOException {
+	public static void main(String[] args) {
 		
 		// TODO 
 
