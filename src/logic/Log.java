@@ -7,24 +7,28 @@ public class Log {
 
 	//Class which creates  2 log (console e file) 
 	
-	private final static Logger log = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );     
+	private Log() {
+		throw new IllegalStateException("Log class");
+	}
+	
+	private static final Logger myLog = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );     
     
     public static void setupLogger() {
     	
         LogManager.getLogManager().reset();
-        log.setLevel(Level.ALL);
+        myLog.setLevel(Level.ALL);
         
         ConsoleHandler ch = new ConsoleHandler();
         ch.setLevel(Level.FINE);
-        log.addHandler(ch);
+        myLog.addHandler(ch);
 
         try {
             FileHandler fh = new FileHandler("Logger.log", true);
             fh.setLevel(Level.FINE);
-            log.addHandler(fh);
+            myLog.addHandler(fh);
         } catch (java.io.IOException e) {            
             // don't stop my program but log out to console.
-            log.log(Level.SEVERE, "File logger not working.", e);
+        	myLog.log(Level.SEVERE, "File logger not working.", e);
         }
          /* 
          Different Levels in order.
@@ -42,7 +46,7 @@ public class Log {
     
     public static void infoLog(String msg ) {
     	
-    	log.info(msg);
+    	myLog.info(msg);
     }
     
    
