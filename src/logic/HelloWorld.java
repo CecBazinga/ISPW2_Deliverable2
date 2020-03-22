@@ -1,13 +1,13 @@
 package logic;
 
-
 public class HelloWorld {
 	
 	public void hello(){
 		
 		//Hello world print
 		
-		System.out.println("This is the real Hello Wolrd ! ");
+		
+		Log.infoLog("This is the real Hello Wolrd ! ");
 		
 	}
 

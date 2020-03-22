@@ -5,9 +5,11 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		HelloWorld saluta = new HelloWorld();
+		Log.setupLogger();
 		
-		saluta.hello();
+		HelloWorld hi = new HelloWorld();
+		
+		hi.hello();
 		
 	}
 
