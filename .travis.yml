@@ -6,7 +6,11 @@ addons:
   sonarcloud:
     organization: "cecbazinga"
     token: "3a652adc6c42958cc6a7d600e769ab152b33ae08"
-   
+
+  apt:
+	packages:
+		ant	   
+		
 script:
 - ant build
 - sonar-scanner
