@@ -8,26 +8,51 @@
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.8"/>
     <property name="source" value="1.8"/>
+    <path id="Maven Dependencies.libraryclasspath">
+        <pathelement location="../../../../../.m2/repository/org/eclipse/jgit/org.eclipse.jgit/5.7.0.202003110725-r/org.eclipse.jgit-5.7.0.202003110725-r.jar"/>
+        <pathelement location="../../../../../.m2/repository/com/jcraft/jsch/0.1.55/jsch-0.1.55.jar"/>
+        <pathelement location="../../../../../.m2/repository/com/jcraft/jzlib/1.1.1/jzlib-1.1.1.jar"/>
+        <pathelement location="../../../../../.m2/repository/com/googlecode/javaewah/JavaEWAH/1.1.7/JavaEWAH-1.1.7.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/slf4j/slf4j-api/1.7.2/slf4j-api-1.7.2.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/bouncycastle/bcpg-jdk15on/1.64/bcpg-jdk15on-1.64.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/bouncycastle/bcprov-jdk15on/1.64/bcprov-jdk15on-1.64.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/bouncycastle/bcpkix-jdk15on/1.64/bcpkix-jdk15on-1.64.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/slf4j/slf4j-jdk14/1.7.5/slf4j-jdk14-1.7.5.jar"/>
+        <pathelement location="../../../../../.m2/repository/com/opencsv/opencsv/5.1/opencsv-5.1.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/apache/commons/commons-lang3/3.9/commons-lang3-3.9.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/apache/commons/commons-text/1.8/commons-text-1.8.jar"/>
+        <pathelement location="../../../../../.m2/repository/commons-beanutils/commons-beanutils/1.9.4/commons-beanutils-1.9.4.jar"/>
+        <pathelement location="../../../../../.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar"/>
+        <pathelement location="../../../../../.m2/repository/commons-collections/commons-collections/3.2.2/commons-collections-3.2.2.jar"/>
+        <pathelement location="../../../../../.m2/repository/org/apache/commons/commons-collections4/4.4/commons-collections4-4.4.jar"/>
+    </path>
     <path id="ISPW2.classpath">
-        <pathelement location="bin"/>
+        <pathelement location="target/classes"/>
+        <pathelement location="java-json.jar"/>
+        <pathelement location="opencsv-5.1.jar"/>
+        <path refid="Maven Dependencies.libraryclasspath"/>
+    </path>
+    <path id="run.Main.classpath">
+        <path refid="ISPW2.classpath"/>
+        <path refid="Maven Dependencies.libraryclasspath"/>
     </path>
     <target name="init">
-        <mkdir dir="bin"/>
-        <copy includeemptydirs="false" todir="bin">
+        <mkdir dir="target/classes"/>
+        <copy includeemptydirs="false" todir="target/classes">
             <fileset dir="src">
                 <exclude name="**/*.java"/>
             </fileset>
         </copy>
     </target>
     <target name="clean">
-        <delete dir="bin"/>
+        <delete dir="target/classes"/>
     </target>
     <target depends="clean" name="cleanall"/>
     <target depends="build-subprojects,build-project" name="build"/>
     <target name="build-subprojects"/>
     <target depends="init" name="build-project">
         <echo message="${ant.project.name}: ${ant.file}"/>
-        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+        <javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" includeantruntime="false" source="${source}" target="${target}">
             <src path="src"/>
             <classpath refid="ISPW2.classpath"/>
         </javac>
@@ -48,7 +73,7 @@
     </target>
     <target name="Main">
         <java classname="logic.Main" failonerror="true" fork="yes">
-            <classpath refid="ISPW2.classpath"/>
+            <classpath refid="run.Main.classpath"/>
         </java>
     </target>
 </project>
