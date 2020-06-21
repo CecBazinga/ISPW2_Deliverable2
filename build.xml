@@ -32,7 +32,7 @@
         <pathelement location="opencsv-5.1.jar"/>
         <path refid="Maven Dependencies.libraryclasspath"/>
     </path>
-    <path id="run.Main.classpath">
+    <path id="run.CalculateBugginess.classpath">
         <path refid="ISPW2.classpath"/>
         <path refid="Maven Dependencies.libraryclasspath"/>
     </path>
@@ -71,9 +71,9 @@
         <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
         <antcall target="build"/>
     </target>
-    <target name="Main">
-        <java classname="logic.Main" failonerror="true" fork="yes">
-            <classpath refid="run.Main.classpath"/>
+    <target name="CalculateBugginess">
+        <java classname="logic.CalculateBugginess" failonerror="true" fork="yes">
+            <classpath refid="run.CalculateBugginess.classpath"/>
         </java>
     </target>
 </project>
