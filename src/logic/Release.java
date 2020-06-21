@@ -13,7 +13,7 @@ public class Release {
 	private String id;
 	private String name;
 	private LocalDateTime date;
-	private List<RevCommit> releaseCommits = new ArrayList<RevCommit>();
+	private List<RevCommit> releaseCommits = new ArrayList<>();
 	
 	public int getIndex() {
 		return index;

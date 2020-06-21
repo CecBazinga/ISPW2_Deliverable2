@@ -11,9 +11,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -21,8 +20,9 @@ import org.json.JSONArray;
 
 public class RetrieveTicketsID {
 
-
-
+   private RetrieveTicketsID() {
+	   
+   }
 
    private static String readAll(Reader rd) throws IOException {
 	      StringBuilder sb = new StringBuilder();
@@ -34,27 +34,23 @@ public class RetrieveTicketsID {
 	   }
 
    public static JSONArray readJsonArrayFromUrl(String url) throws IOException, JSONException {
-      InputStream is = new URL(url).openStream();
-      try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+    
+      try(InputStream is = new URL(url).openStream()) {
+    	  
+         BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8.name()));
          String jsonText = readAll(rd);
-         JSONArray json = new JSONArray(jsonText);
-         return json;
-       } finally {
-         is.close();
-       }
+         return new JSONArray(jsonText);
+         
+       } 
    }
 
    public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
-      InputStream is = new URL(url).openStream();
-      try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+      
+      try (InputStream is = new URL(url).openStream();){
+         BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8.name()));
          String jsonText = readAll(rd);
-         JSONObject json = new JSONObject(jsonText);
-         return json;
-       } finally {
-         is.close();
-       }
+         return new JSONObject(jsonText);
+       } 
    }
 
 
@@ -62,7 +58,10 @@ public class RetrieveTicketsID {
    
   	public static void getIdFixedTicketList(String projName,List<String> tickets) throws IOException, JSONException {
 		   
-	  Integer j = 0, i = 0, total = 1;
+	  Integer j = 0;
+	  Integer i = 0;
+	  Integer total = 1;
+	  
       //Get JSON API for closed bugs w/ AV in the project
       do {
          //Only gets a max of 1000 at a time, so must do this multiple times if bugs >1000
@@ -74,20 +73,23 @@ public class RetrieveTicketsID {
          JSONObject json = readJsonFromUrl(url);
          JSONArray issues = json.getJSONArray("issues");
          total = json.getInt("total");
+         Log.infoLog("Le key di tutti i ticket di tipo bug fixed sono : \n");
          for (; i < total && i < j; i++) {
             //Iterate through each bug
             String key = issues.getJSONObject(i%1000).get("key").toString();
             tickets.add(key);
-            //System.out.println(key);
+            Log.infoLog(key+"\n");
          }  
       } while (i < total);
-      return;
    }
   	
   	
   	public static void getFixedTicketList(String projName,List<Ticket> tickets) throws IOException, JSONException {
 		   
-  	  Integer j = 0, i = 0, total = 1;
+  	  Integer j = 0;
+  	  Integer i = 0;
+  	  Integer total = 1;
+  	  String field = "fields";
         //Get JSON API for closed bugs w/ AV in the project
   	  
   	  
@@ -108,10 +110,10 @@ public class RetrieveTicketsID {
         	  String expand = issues.getJSONObject(i%1000).get("expand").toString();
         	  String id = issues.getJSONObject(i%1000).get("id").toString();
               String key = issues.getJSONObject(i%1000).get("key").toString();
-              String createdDate = issues.getJSONObject(i%1000).getJSONObject("fields").get("created").toString();
-              String resolutionDate = issues.getJSONObject(i%1000).getJSONObject("fields").get("resolutiondate").toString();
+              String createdDate = issues.getJSONObject(i%1000).getJSONObject(field).get("created").toString();
+              String resolutionDate = issues.getJSONObject(i%1000).getJSONObject(field).get("resolutiondate").toString();
               
-              JSONArray affectedVersions = issues.getJSONObject(i%1000).getJSONObject("fields").getJSONArray("versions");
+              JSONArray affectedVersions = issues.getJSONObject(i%1000).getJSONObject(field).getJSONArray("versions");
               
               Ticket ticket = new Ticket();
               
@@ -147,12 +149,7 @@ public class RetrieveTicketsID {
            
            }  
         } while (i < total);
-       
-           
-        return ;
      }
-
-   
 }
 
 

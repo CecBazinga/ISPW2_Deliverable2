@@ -15,7 +15,7 @@ public class Ticket {
 
 	public void initializeAV() {
 		
-		this.affectedVersions = new ArrayList<AffectedVersion>();
+		this.affectedVersions = new ArrayList<>();
 	}
 	
 	public String getId() {

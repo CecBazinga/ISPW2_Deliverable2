@@ -49,5 +49,10 @@ public class Log {
     	myLog.info(msg);
     }
     
+    public static void errorLog(String msg ) {
+    	
+    	myLog.severe(msg);
+    }
+    
    
 }

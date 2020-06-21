@@ -6,39 +6,44 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Collections;
-import java.util.Comparator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
-
+import java.nio.charset.StandardCharsets;
 
 public class GetReleaseInfo {
 	
-	   public static HashMap<LocalDateTime, String> releaseNames;
-	   public static HashMap<LocalDateTime, String> releaseID;
-	   public static ArrayList<LocalDateTime> releases;
-	   public static Integer numVersions;
+    protected static HashMap<LocalDateTime, String> releaseNames;
+    protected static HashMap<LocalDateTime, String> releaseID;
+    protected static ArrayList<LocalDateTime> releases;
+    
 
+	private GetReleaseInfo() {
+		   
+	}
+	   
 	public static void getProjectReleases(String project, List<Release> releasesArray) throws IOException, JSONException {
 		   
 		   String projName = project;
-		 //Fills the arraylist with releases dates and orders them
+		   //Fills the arraylist with releases dates and orders them
 		   //Ignores releases with missing dates
-		   releases = new ArrayList<LocalDateTime>();
+		   releases = new ArrayList<>();
 		         Integer i;
 		         String url = "https://issues.apache.org/jira/rest/api/2/project/" + projName;
 		         JSONObject json = readJsonFromUrl(url);
 		         JSONArray versions = json.getJSONArray("versions");
-		         releaseNames = new HashMap<LocalDateTime, String>();
-		         releaseID = new HashMap<LocalDateTime, String> ();
+		         releaseNames = new HashMap<>();
+		         releaseID = new HashMap<> ();
+		         
+		        
+	        	 
 		         for (i = 0; i < versions.length(); i++ ) {
 		            String name = "";
 		            String id = "";
@@ -51,17 +56,15 @@ public class GetReleaseInfo {
 		                          name,id);
 		            }
 		         }
+	         
+		         
 		         // order releases by date
-		         Collections.sort(releases, new Comparator<LocalDateTime>(){
-		            //@Override
-		            public int compare(LocalDateTime o1, LocalDateTime o2) {
-		                return o1.compareTo(o2);
-		            }
-		         });
+		         Collections.sort(releases, (o1, o2) ->  o1.compareTo(o2));
+		       
 		         if (releases.size() < 6)
 		            return;
 		         
-	             numVersions = releases.size();
+	             
 	             for ( i = 0; i < releases.size(); i++) {
 	                Integer index = i + 1;
 	                Release release = new Release();
@@ -71,9 +74,6 @@ public class GetReleaseInfo {
 	                release.setDate(releases.get(i));
 	                releasesArray.add(release);
 	             }
-
-		         
-		         return;
 		   }
  
 	
@@ -84,20 +84,19 @@ public class GetReleaseInfo {
 		         releases.add(dateTime);
 		      releaseNames.put(dateTime, name);
 		      releaseID.put(dateTime, id);
-		      return;
 		   }
 
 
 	   public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
-	      InputStream is = new URL(url).openStream();
-	      try {
-	         BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+	     
+	      try(InputStream is = new URL(url).openStream()) {
+	         BufferedReader rd = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8.name()));
 	         String jsonText = readAll(rd);
-	         JSONObject json = new JSONObject(jsonText);
-	         return json;
-	       } finally {
-	         is.close();
-	       }
+	         
+	         return  new JSONObject(jsonText);
+	         
+	       } 
+		
 	   }
 	   
 	   private static String readAll(Reader rd) throws IOException {

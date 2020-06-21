@@ -3,77 +3,79 @@ package logic;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.json.JSONException;
 
 import com.opencsv.CSVWriter;
 
-public class EvaluateFixedBugs {
+public final class EvaluateFixedBugs {
 	
-	public static Calendar toCalendar(Date date){ 
+	private static int ticketWithoutCommit = 0;
+	private static int commitWithoutDate =0;
+	private static int bugsPerMonth = 0 ;
+	private static List<GraphMonth> graphMonths ;
+	private static List<Date> latestCommitsDates ;
+	
+	private EvaluateFixedBugs() {
+		
+	}
+	
+	private static Calendar toCalendar(Date date){ 
 		  Calendar cal = Calendar.getInstance();
 		  cal.setTime(date);
 		  return cal;
 		}
 
-	public static void Evaluate(String projName) throws IOException, JSONException, InvalidRemoteException, TransportException, GitAPIException{
+	public static void handleTicketWithoutCommit(List<RevCommit> fixedCommits) {
 		
+		Date authorDate;
+		Date date;
 		
-		String path ="C:\\Users\\Utente\\Desktop\\ISPW2\\Falessi\\progetti\\"+projName;
+		if(fixedCommits.isEmpty()) {
+			
+			ticketWithoutCommit = ticketWithoutCommit+1 ;
 		
-		projName.toLowerCase();
-		File f = new File(path);
-		
-		if(!f.exists()) {
-		Git.cloneRepository()
-		  .setURI("https://github.com/apache/"+ projName)
-		  .setDirectory(new File(path))
-		  .call();
+		}else {
+			
+			authorDate = fixedCommits.get(0).getAuthorIdent().getWhen();
+			
+			for(int d=1;d<fixedCommits.size();d++) {                           //gets latest commit among all commits relative to same ticket
+				
+				date =fixedCommits.get(d).getAuthorIdent().getWhen();
+				if(date.after(authorDate)){
+					authorDate = date;
+				}
+			}
+			latestCommitsDates.add(authorDate);
+			
 		}
-		
-		List<String> tickets = new ArrayList<String>();
-		RetrieveTicketsID.getIdFixedTicketList(projName,tickets);             //creates a list containig all tickets IDs relative to fixed bugs
-			
-		Git git = Git.open(new File(path));
-		Iterable<RevCommit> projLog = git.log().call();    					//gets all commits in log
-		List<RevCommit> commitList = new  ArrayList<RevCommit>();
-		
-		for (RevCommit commitLog : projLog) {
-			
-			commitList.add(commitLog);
+	}
 	
-		}
-		
-		
-		int ticketWithoutCommit = 0;
-		int ticketsNumber = tickets.size();
-		int commitWithoutDate =0;
-		
-		List<Date> latestCommitsDates = new ArrayList<Date>();
+	public static void handleCommitWithoutDate(List<String> tickets , List<RevCommit> commitList ) {
 		
 		for(String ticket : tickets) {                                      // for every ticket gets the last commit relative to it
 			
 			
-			System.out.println( ticket + " " +"\n\n");
+			Log.infoLog(ticket + " " +"\n\n");
 			
-			List<RevCommit> fixedCommits = new ArrayList<RevCommit>();
+			List<RevCommit> fixedCommits = new ArrayList<>();
 
 			
 			for (RevCommit commit : commitList) {
 				
-				//System.out.println( commit  +"\n");
-				if(commit.getFullMessage().contains((ticket + " ")) == true ) {        //gets all commits which contain same ticket ID
+				
+				Log.infoLog(commit  +"\n");
+				if(commit.getFullMessage().contains((ticket + " "))) {        //gets all commits which contain same ticket ID
 					fixedCommits.add(commit);
 					if(commit.getAuthorIdent().getWhen()== null) {
 						commitWithoutDate = commitWithoutDate + 1;
@@ -81,64 +83,31 @@ public class EvaluateFixedBugs {
 				}
 			}
 		
-			Date authorDate,date;
-			if(fixedCommits.size()==0) {
-				
-				ticketWithoutCommit = ticketWithoutCommit+1 ;
-			
-			}else {
-				
-				authorDate = fixedCommits.get(0).getAuthorIdent().getWhen();
-				
-				for(int d=1;d<fixedCommits.size();d++) {                           //gets latest commit among all commits relative to same ticket
-					
-					date =fixedCommits.get(d).getAuthorIdent().getWhen();
-					if(date.after(authorDate)){
-						authorDate = date;
-					}
-				}
-				latestCommitsDates.add(authorDate);
-				
-			}
+			handleTicketWithoutCommit( fixedCommits );
 			
 		}
-		
-		System.out.print("le date sono : " + latestCommitsDates.size() + "\n");
-		System.out.print("i ticket totali sono : " + ticketsNumber + "\n");
-		System.out.print("i ticket senza alcun commit sono : " + ticketWithoutCommit + "\n");
-		
-		System.out.print("le date sono : " + latestCommitsDates + "\n");
-		
-		Collections.sort(latestCommitsDates, new Comparator<Date>(){
-			 
-            @Override
-            public int compare(Date o1, Date o2) {
-                return o1.compareTo(o2);
-            }
-        });
-		System.out.print("le date sono : " + latestCommitsDates + "\n");
+	}
+	
+	public static void initializeBugsPerMonth() {
 		
 		Calendar calendar1 = toCalendar(latestCommitsDates.get(0));
 		int year1 = calendar1.get(Calendar.YEAR);
 		int month1= calendar1.get(Calendar.MONTH)+1;
 		
-		System.out.print("l anno iniziale è : " + year1 + "\n");
-		System.out.print("il mese iniziale è : " + month1 + "\n");
+		Log.infoLog("l anno iniziale è : " + year1 + "\n");
+		Log.infoLog("il mese iniziale è : " + month1 + "\n");
 		
 		Calendar calendar2 = toCalendar(latestCommitsDates.get(latestCommitsDates.size()-1));
 		int year2 = calendar2.get(Calendar.YEAR);
 		int month2= calendar2.get(Calendar.MONTH)+1;
 		
-		
-		System.out.print("l anno finale è : " + year2 + "\n");
-		System.out.print("il mese finale è : " + month2 + "\n");
+		Log.infoLog("l anno finale è : " + year2 + "\n");
+		Log.infoLog("il mese finale è : " + month2 + "\n");
 		
 		
 		int totalMonths = (year2-year1)*12 + (month2-month1) +1;
-		System.out.print("mesi totali : " + totalMonths + "\n");
+		Log.infoLog("mesi totali : " + totalMonths + "\n");
 		
-		List<GraphMonth> graphMonths = new ArrayList<GraphMonth>();
-		int bugsPerMonth = 0 ;
 		int month = month1;
 		int year =  year1 ;
 		String monthDate;
@@ -153,10 +122,56 @@ public class EvaluateFixedBugs {
 			else {
 				monthDate = month + "-"+ year;
 			}
-			System.out.print("mese : " + monthDate + "\n");
+			Log.infoLog("mese : " + monthDate + "\n");
 			graphMonths.add(new GraphMonth(monthDate,bugsPerMonth));
 			month = month+1;
 		}
+	}
+	
+	public static void evaluate(String projName,String path) throws IOException, JSONException, GitAPIException{
+		
+		
+		
+		String csvName = path+"\\"+ projName+".csv" ;
+				
+		File f = new File(path);
+		
+		if(!f.exists()) {
+		Git.cloneRepository()
+		  .setURI("https://github.com/apache/"+ projName.toLowerCase())
+		  .setDirectory(new File(path))
+		  .call();
+		}
+		
+		List<String> tickets = new ArrayList<>();
+		RetrieveTicketsID.getIdFixedTicketList(projName,tickets);             //creates a list containig all tickets IDs relative to fixed bugs
+			
+		Git git = Git.open(new File(path));
+		Iterable<RevCommit> projLog = git.log().call();    					//gets all commits in log
+		List<RevCommit> commitList = new  ArrayList<>();
+		
+		for (RevCommit commitLog : projLog) {
+			
+			commitList.add(commitLog);
+	
+		}
+		
+		int ticketsNumber = tickets.size();
+		latestCommitsDates = new ArrayList<>();
+		graphMonths = new ArrayList<>();
+		
+		handleCommitWithoutDate(tickets,commitList);
+		
+		
+		Log.infoLog("i ticket totali sono : " + ticketsNumber + "\n");
+		Log.infoLog("i ticket senza alcun commit sono : " + ticketWithoutCommit + "\n");
+		Log.infoLog("le date totali sono : " + latestCommitsDates.size() + "\n");
+		Log.infoLog("le date sono : " + latestCommitsDates + "\n");
+			 
+		
+		Collections.sort(latestCommitsDates, (o1, o2) ->  o1.compareTo(o2));
+        
+		initializeBugsPerMonth();
 		
 		for(GraphMonth monthBugs : graphMonths) {
 			
@@ -180,15 +195,16 @@ public class EvaluateFixedBugs {
 					
 			}
 			monthBugs.setFixedBugs(bugsPerMonth);
-			System.out.print("bug risolti : " + monthBugs.getBugsNumber() + "\n");
+			Log.infoLog("bug risolti : " + monthBugs.getBugsNumber() + "\n");
 		}
 		
 		
-		File file = new File(path+"\\"+ projName+".csv"); 
-	    try { 
-	        // create FileWriter object with file as parameter 
-	        FileWriter outputfile = new FileWriter(file); 
-	  
+		File file = new File(csvName); 
+		
+		// create FileWriter object with file as parameter 
+	
+	    try (FileWriter outputfile = new FileWriter(file)){ 
+
 	        // create CSVWriter object filewriter object as parameter 
 	        CSVWriter writer = new CSVWriter(outputfile); 
 	  
@@ -206,8 +222,12 @@ public class EvaluateFixedBugs {
 	        writer.close(); 
 	    } 
 	    catch (IOException e) { 
-	        // TODO Auto-generated catch block 
-	        e.printStackTrace(); 
+	    	
+	        Log.errorLog("Errore nella scrittura del csv \n");
+	        StringWriter sw = new StringWriter();
+	        PrintWriter pw = new PrintWriter(sw);
+	        e.printStackTrace(pw);
+	        Log.errorLog(sw.toString());
 	    } 
 	}
 	
