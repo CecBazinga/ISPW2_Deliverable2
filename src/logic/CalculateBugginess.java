@@ -178,15 +178,89 @@ public class CalculateBugginess {
 		
 	}
 
+	public static void calculateProportion(int openingVersion,int fixedVersion,LocalDate injectionVersionDate,Release openingRelease,int injectedVersion) {
+		
+		if((openingVersion!=0) && (fixedVersion!=0)) {
+			
+			if(injectionVersionDate.compareTo(openingRelease.getDate().toLocalDate()) > 0) {
+				
+				invalidTickets++;
+				aVInvalidTickets++;		
+				
+				if((fixedVersion-openingVersion) == 0) {
+					ticketWithFVEqualsToOV++;
+					aVticketWithFVEqualsToOV++;
+				}
+			}else {
+				
+				if((fixedVersion-openingVersion) > 0) {
+					
+					p = ((double)fixedVersion-(double)injectedVersion)/(fixedVersion-openingVersion);
+				
+					proportionArray.add(p);
+			
+				}else {
+					
+					ticketWithFVEqualsToOV++;
+					aVticketWithFVEqualsToOV++;
+
+				}
+			}		
+		}
+	}
+	
+	public static void checkTicketDates(List<Release> releasesArray,List<AffectedVersion> aV,
+			LocalDate creationDate,LocalDate resolutionDate,LocalDate injectionVersionDate) {
+		
+		int oV;
+		int fV;
+		int iV;
+		
+		Release injectedRelease = getReleaseByName(releasesArray,aV.get(0).getName());
+		
+		if(injectedRelease==null) {
+			
+			ticketsWithoutInjectionVersion++;
+			aVticketsWithoutInjectionVersion++;
+			
+		}else {
+			iV = injectedRelease.getIndex();
+			
+			Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
+			if(openingRelease==null) {
+				
+				ticketsWithoutOpeningVersion++;
+				aVticketsWithoutOpeningVersion++;	
+				oV = 0;
+			}else {
+				oV = openingRelease.getIndex();
+			}
+			
+			
+			Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);				
+			if(fixRelease==null) {		
+				
+				ticketsWithoutFixedVersion++;	
+				aVticketsWithoutFixedVersion++;	
+				fV = 0;
+			}else {					
+				fV = fixRelease.getIndex();
+			}
+		
+			calculateProportion(oV, fV, injectionVersionDate, openingRelease, iV);
+
+		}
+	}
+	
 	public static void calculatePOverTicketList( List<Ticket> tickets ,  List<Release> releasesArray) {
 		
-		int openingVersion;
-		int fixedVersion;
-		int injectedVersion;
-		
-		for(Ticket ticket : tickets) {                                           // per ogni ticket dotato di Av vado a calcolare il proportion
+		for(Ticket ticket : tickets) {                                           
 			
-			if(!ticket.getAffectedVersions().isEmpty()) {                     //  calcolo la injectedVersion come la data piu anziana tra le date delle AffectedVersion
+			// per ogni ticket dotato di Av vado a calcolare il proportion
+			
+			if(!ticket.getAffectedVersions().isEmpty()) {                     
+				
+			//  calcolo la injectedVersion come la data piu anziana tra le date delle AffectedVersion
 				
 				ticketsWithAV ++;
 				
@@ -209,68 +283,11 @@ public class CalculateBugginess {
 					aVInvalidTickets++;		
 					
 					
-				}else {                                                                                         //acquiring indexes of the IV,OV,FV
+				}else {                                                                                        
 					
-					Release injectedRelease = getReleaseByName(releasesArray,aV.get(0).getName());
-				
-					if(injectedRelease==null) {
-						
-						ticketsWithoutInjectionVersion++;
-						aVticketsWithoutInjectionVersion++;
-						
-					}else {
-						injectedVersion = injectedRelease.getIndex();
-						
-						Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
-						if(openingRelease==null) {
-							
-							ticketsWithoutOpeningVersion++;
-							aVticketsWithoutOpeningVersion++;	
-							openingVersion = 0;
-						}else {
-							openingVersion = openingRelease.getIndex();
-						}
-						
-						
-						Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);				
-						if(fixRelease==null) {		
-							
-							ticketsWithoutFixedVersion++;	
-							aVticketsWithoutFixedVersion++;	
-							fixedVersion = 0;
-						}else {					
-							fixedVersion = fixRelease.getIndex();
-						}
+					//acquiring indexes of the IV,OV,FV
+					checkTicketDates(releasesArray, aV, creationDate,resolutionDate, injectionVersionDate);
 					
-						
-						if((openingVersion!=0) && (fixedVersion!=0)) {
-							
-							if(injectionVersionDate.compareTo(openingRelease.getDate().toLocalDate()) > 0) {
-								
-								invalidTickets++;
-								aVInvalidTickets++;		
-								
-								if((fixedVersion-openingVersion) == 0) {
-									ticketWithFVEqualsToOV++;
-									aVticketWithFVEqualsToOV++;
-								}
-							}else {
-								
-								if((fixedVersion-openingVersion) > 0) {
-									
-									p = ((double)fixedVersion-(double)injectedVersion)/(fixedVersion-openingVersion);
-								
-									proportionArray.add(p);
-							
-								}else {
-									
-									ticketWithFVEqualsToOV++;
-									aVticketWithFVEqualsToOV++;
-				
-								}
-							}		
-						}
-					}
 				}
 			}	
 		}
