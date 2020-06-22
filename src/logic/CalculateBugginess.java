@@ -142,7 +142,9 @@ public class CalculateBugginess {
 			}
 		}
 		
-		return null;
+		Release release = new Release();
+		release.setIndex(-1);
+		return release;
 		
 		
 	}
@@ -158,7 +160,9 @@ public class CalculateBugginess {
 			}
 		}
 		
-		return null;
+		Release release = new Release();
+		release.setIndex(-1);
+		return release;
 		
 		
 	}
@@ -174,8 +178,9 @@ public class CalculateBugginess {
 			}
 		}
 		
-		return null;
-		
+		Release release = new Release();
+		release.setIndex(-1);
+		return release;
 	}
 
 	public static void calculateProportion(int openingVersion,int fixedVersion,LocalDate injectionVersionDate,Release openingRelease,int injectedVersion) {
@@ -218,7 +223,7 @@ public class CalculateBugginess {
 		
 		Release injectedRelease = getReleaseByName(releasesArray,aV.get(0).getName());
 		
-		if(injectedRelease==null) {
+		if(injectedRelease.getIndex() < 0) {
 			
 			ticketsWithoutInjectionVersion++;
 			aVticketsWithoutInjectionVersion++;
@@ -227,7 +232,7 @@ public class CalculateBugginess {
 			iV = injectedRelease.getIndex();
 			
 			Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
-			if(openingRelease==null) {
+			if(openingRelease.getIndex() < 0) {
 				
 				ticketsWithoutOpeningVersion++;
 				aVticketsWithoutOpeningVersion++;	
@@ -238,7 +243,7 @@ public class CalculateBugginess {
 			
 			
 			Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);				
-			if(fixRelease==null) {		
+			if(fixRelease.getIndex() < 0) {		
 				
 				ticketsWithoutFixedVersion++;	
 				aVticketsWithoutFixedVersion++;	
@@ -252,6 +257,38 @@ public class CalculateBugginess {
 		}
 	}
 	
+	public static boolean booleanCheckTicketDates(List<Release> releasesArray, LocalDate creationDate, LocalDate resolutionDate, LocalDate injectionVersionDate ) {
+		
+		int openingVersion;
+		int fixedVersion ;
+		
+		Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
+		if(openingRelease.getIndex() < 0) {
+			return false;
+		}else {
+			openingVersion = openingRelease.getIndex();
+		}
+		
+		
+		Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);				
+		if(fixRelease.getIndex() < 0) {					
+			return false;
+		}else {					
+			fixedVersion = fixRelease.getIndex();
+		}
+		
+		if(injectionVersionDate.compareTo(openingRelease.getDate().toLocalDate()) > 0) {
+			
+			return false ;
+			
+		}
+		
+		// OV and FV aren't the same
+		
+		return ((fixedVersion-openingVersion) > 0);
+		
+	}
+
 	public static void calculatePOverTicketList( List<Ticket> tickets ,  List<Release> releasesArray) {
 		
 		for(Ticket ticket : tickets) {                                           
@@ -342,9 +379,6 @@ public class CalculateBugginess {
 		
 		//check if dates in a ticket are consistent and not null
 		// this function is meant to be used on tickets which has ALWAYS a sure IV(AffectedVersion)
-		
-		int openingVersion;
-		int fixedVersion ;
 				
 			if(!ticket.getAffectedVersions().isEmpty()) {
 				
@@ -357,7 +391,7 @@ public class CalculateBugginess {
 				
 				Release injectedRelease = getReleaseByName(releasesArray,aV.get(0).getName());
 				
-				if(injectedRelease==null) {
+				if(injectedRelease.getIndex() < 0) {
 					
 					return false;
 					
@@ -368,47 +402,25 @@ public class CalculateBugginess {
 					
 					LocalDate resolutionDate = LocalDate.parse(ticket.getResolutionDate().substring(0 , 10 ));
 					
-					if( creationDate.compareTo(resolutionDate) > 0) {       // check on dates consistency	
+					// check on dates consistency	
+					
+					if( creationDate.compareTo(resolutionDate) > 0) {       
 						
 						return false ;			
 						
-					}else {                                                                                         //acquiring indexes of the IV,OV,FV
-						
-						
-						Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
-						if(openingRelease==null) {
-							return false;
-						}else {
-							openingVersion = openingRelease.getIndex();
-						}
-						
-						
-						Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);				
-						if(fixRelease==null) {					
-							return false;
-						}else {					
-							fixedVersion = fixRelease.getIndex();
-						}
-						
-						if(injectionVersionDate.compareTo(openingRelease.getDate().toLocalDate()) > 0) {
-							
-							return false ;
-							
-						}
+					}
+					//acquiring indexes of the IV,OV,FV and checking them
 					
-							
-						if((fixedVersion-openingVersion) > 0) {          // OV and FV aren't the same
-							
-							return true;
-					
-						}
+					else if(booleanCheckTicketDates(releasesArray, creationDate, resolutionDate, injectionVersionDate)){                                     
+						
+						return true ;
+						
 									
 					}	
 				}
 			}
 			
 			return false;
-			
 	}
 
 	public static void retrieveAndSortCommitsForTicket(Ticket ticket , List<RevCommit> allCommits , List<RevCommit> ticketsCommits ) {
@@ -493,6 +505,63 @@ public class CalculateBugginess {
 		return null;
 	}
 
+	public static void evaluateNFix(List<DiffEntry> diffEntries,List<FileAlias> filesAlias,String fileName,int nFix) {
+		
+		
+		for(DiffEntry dEntry : diffEntries) {
+			
+			String type = dEntry.getChangeType().toString();
+			
+			String oldPath = dEntry.getOldPath().substring( dEntry.getOldPath().indexOf("/")+1);
+			oldPath = oldPath.replace("/", "\\");
+			
+			if(type.equals(TYPE_DELETE) || type.equals(TYPE_MODIFY) ) {
+				
+				String alias = checkAlias(oldPath,filesAlias);
+				String nameToBeUsed = null ;
+				
+				if( (alias!=null)  ){
+					
+					nameToBeUsed = alias;
+				
+				}else { 
+				
+					nameToBeUsed = oldPath;
+				}
+				
+				if(fileName.equals(nameToBeUsed) || fileName.contains(nameToBeUsed)) {
+					
+					nFix++;
+				}
+				
+			}
+			
+		}
+	}
+	
+	public static void processTicketForEvaluatingNFix(List<RevCommit> ticketCommits,DBEntry entry,Git git,
+			List<FileAlias> filesAlias,String fileName,int nFix) throws IOException {
+		
+		if(!ticketCommits.isEmpty()) {
+			
+			for(int i=0;i<ticketCommits.size();i++) {
+		
+				LocalDateTime commitDate = Instant.ofEpochSecond(ticketCommits.get(i).getCommitTime()).atZone(ZoneId.of("UTC")).toLocalDateTime();
+				
+				if(entry.getRelease().getDate().compareTo(commitDate) > 0) {
+					
+					List<DiffEntry> diffEntries = calculateDiffEntries(ticketCommits.get(i), git);
+					
+					if(!diffEntries.isEmpty()){
+						
+						evaluateNFix(diffEntries, filesAlias, fileName, nFix);
+						
+					}
+				}
+			}
+		}
+	}
+	
 	public static void calculateNFix(List<RevCommit> commitList, List<Ticket> ticketList, List<DBEntry> dBEntriesList,Git git,List<FileAlias> filesAlias ) 
 			throws IOException {
 		
@@ -501,57 +570,15 @@ public class CalculateBugginess {
 			int nFix = 0;
 			
 			String fileName = entry.getFileName();
-			
+			 
 			for(Ticket t : ticketList) {
 					
 				List<RevCommit> ticketCommits = new ArrayList<>();
 				
 				retrieveAndSortCommitsForTicket(t,commitList,ticketCommits);
 				
-				if(!ticketCommits.isEmpty()) {
-						
-					for(int i=0;i<ticketCommits.size();i++) {
-				
-						LocalDateTime commitDate = Instant.ofEpochSecond(ticketCommits.get(i).getCommitTime()).atZone(ZoneId.of("UTC")).toLocalDateTime();
-						
-						if(entry.getRelease().getDate().compareTo(commitDate) > 0) {
-							
-							List<DiffEntry> diffEntries = calculateDiffEntries(ticketCommits.get(i), git);
-							
-							if(!diffEntries.isEmpty()){
-								for(DiffEntry dEntry : diffEntries) {
-									
-									String type = dEntry.getChangeType().toString();
-									
-									String oldPath = dEntry.getOldPath().substring( dEntry.getOldPath().indexOf("/")+1);
-									oldPath = oldPath.replace("/", "\\");
-									
-									if(type.equals(TYPE_DELETE) || type.equals(TYPE_MODIFY) ) {
-										
-										String alias = checkAlias(oldPath,filesAlias);
-										String nameToBeUsed = null ;
-										
-										if( (alias!=null)  ){
-											
-											nameToBeUsed = alias;
-										
-										}else { 
-										
-											nameToBeUsed = oldPath;
-										}
-										
-										if(fileName.equals(nameToBeUsed) || fileName.contains(nameToBeUsed)) {
-											
-											nFix++;
-										}
-										
-									}
-									
-								}
-							}
-						}
-					}
-				}
+				processTicketForEvaluatingNFix(ticketCommits, entry, git, filesAlias, fileName, nFix);
+
 			}
 			
 			entry.setnFix(nFix);
