@@ -52,6 +52,15 @@ public class CalculateBugginess {
 	private static String mode ;
 	private static List<Double> proportionArray = new ArrayList<>();
 	private static double p = 0;
+	private static int nFix;
+	private static int locAdded;
+	private static int locDeleted;
+	private static int commitLocAdded;
+	private static int commitLocDeleted;
+	
+	
+	
+
 	
 	private static int invalidTickets = 0;
 	private static int aVInvalidTickets = 0; 
@@ -505,7 +514,7 @@ public class CalculateBugginess {
 		return null;
 	}
 
-	public static void evaluateNFix(List<DiffEntry> diffEntries,List<FileAlias> filesAlias,String fileName,int nFix) {
+	public static void evaluateNFix(List<DiffEntry> diffEntries,List<FileAlias> filesAlias,String fileName) {
 		
 		
 		for(DiffEntry dEntry : diffEntries) {
@@ -540,7 +549,7 @@ public class CalculateBugginess {
 	}
 	
 	public static void processTicketForEvaluatingNFix(List<RevCommit> ticketCommits,DBEntry entry,Git git,
-			List<FileAlias> filesAlias,String fileName,int nFix) throws IOException {
+			List<FileAlias> filesAlias,String fileName) throws IOException {
 		
 		if(!ticketCommits.isEmpty()) {
 			
@@ -554,7 +563,7 @@ public class CalculateBugginess {
 					
 					if(!diffEntries.isEmpty()){
 						
-						evaluateNFix(diffEntries, filesAlias, fileName, nFix);
+						evaluateNFix(diffEntries, filesAlias, fileName);
 						
 					}
 				}
@@ -567,7 +576,7 @@ public class CalculateBugginess {
 		
 		for(DBEntry entry : dBEntriesList) {
 			
-			int nFix = 0;
+			nFix = 0;
 			
 			String fileName = entry.getFileName();
 			 
@@ -577,7 +586,7 @@ public class CalculateBugginess {
 				
 				retrieveAndSortCommitsForTicket(t,commitList,ticketCommits);
 				
-				processTicketForEvaluatingNFix(ticketCommits, entry, git, filesAlias, fileName, nFix);
+				processTicketForEvaluatingNFix(ticketCommits, entry, git, filesAlias, fileName);
 
 			}
 			
@@ -604,8 +613,136 @@ public class CalculateBugginess {
 		return count;
  	}
 	
+	public static String handleNameToBeUsed(DiffEntry diff,List<FileAlias> filesAlias,List<String>  changeSet) {
+		
+		String path;
+		
+		if(diff.getChangeType().toString().equals(TYPE_ADD) ) {
+			
+			path = diff.getNewPath().substring( diff.getNewPath().indexOf("/")+1);
+			path = path.replace("/", "\\");
+		}else {
+			
+			path = diff.getOldPath().substring( diff.getOldPath().indexOf("/")+1);
+			path = path.replace("/", "\\");
+			
+		}
+				
+		String alias = checkAlias(path,filesAlias);
+		String nameToBeUsed = null ;
+		
+		if( (alias!=null)  ){
+			
+			nameToBeUsed = alias;
+		
+		}else { 
+		
+			nameToBeUsed = path;
+		}
+				
+		if(!changeSet.contains(nameToBeUsed)) {
+			changeSet.add(nameToBeUsed);
+		}
+		
+		return nameToBeUsed;
+	}
 	
+	public static void computeLocAddedAndDeleted(DiffFormatter df,DiffEntry diff) throws  IOException {
+		
+		
+		for(Edit edit : df.toFileHeader(diff).toEditList()) {
+			
+			locAdded += edit.getEndB() - edit.getBeginB();
+			locDeleted += edit.getEndA() - edit.getBeginA();
+			commitLocAdded += edit.getEndB() - edit.getBeginB();
+			commitLocDeleted += edit.getEndA() - edit.getBeginA();
+
+		}
+		
+	}
 	
+	public static void evaluateTotalChgSetSize(boolean calculateChgSet,List<Integer> avgMaxChgSetSize,List<String>  changeSet,List<String>  realChangeSet) {
+		
+		if(calculateChgSet) {
+			avgMaxChgSetSize.add(changeSet.size());
+			for(int i = 0; i < changeSet.size();i++) {
+				if(!realChangeSet.contains(changeSet.get(i))) {
+					realChangeSet.add(changeSet.get(i));
+				}
+			}
+		}
+		
+	}
+	
+	public static List<DiffEntry> getDiffsForCommit(DiffFormatter df,RevCommit commit,RevCommit parent,Git git) throws IOException {
+		
+		if(commit.getParentCount()!=0) {
+			parent = commit.getParent(0);
+
+		}
+		
+		df.setRepository(git.getRepository());
+		df.setDiffComparator(RawTextComparator.DEFAULT);
+		df.setDetectRenames(true);
+		List<DiffEntry> diffs;
+		if(parent != null) {
+				diffs = df.scan(parent.getTree(), commit.getTree());
+		}
+		else {
+			
+			try ( RevWalk rw = new RevWalk(git.getRepository())){
+			
+				ObjectReader reader = rw.getObjectReader();
+				diffs =df.scan(new EmptyTreeIterator(),
+				        new CanonicalTreeParser(null, reader, commit.getTree()));
+			}
+		}
+		
+		return diffs;
+		
+	}
+	
+	public static void checkAuthor(List<String> authors,String author) {
+		
+		if(!authors.contains(author)) {
+			authors.add(author);
+		}
+		
+	}
+	
+	public static double computeCommitsLocAdded(List<Integer> commitsLocAdded) {
+		
+		double sum = 0;
+		
+		for(int i=0; i < commitsLocAdded.size() ; i++) {
+			sum += commitsLocAdded.get(i);
+		}
+		
+		return sum;
+	}
+	
+	public static double computeCommitsChurn(List<Integer> commitsChurn) {
+		
+		double sumChurn = 0;
+		
+		for(int i=0; i < commitsChurn.size() ; i++) {
+			sumChurn += commitsChurn.get(i);
+		}
+		
+		return sumChurn;
+	}
+	
+	public static double computeCommitsChgSetSize(List<Integer> avgMaxChgSetSize) {
+		
+		double sumChgSetSize = 0;
+		
+		for(int i=0; i < avgMaxChgSetSize.size() ; i++) {
+			sumChgSetSize += avgMaxChgSetSize.get(i);
+		}
+		
+		return sumChgSetSize;
+		
+	}
 	
 	public static void calculateMetrics(Git git,List<DBEntry> dBEntries,List<FileAlias> filesAlias) throws IOException {
 		
@@ -621,142 +758,81 @@ public class CalculateBugginess {
 		// prendo tutti i commit nella release e mi calcolo le metriche per ogni file delal release
 		for(DBEntry entry : dBEntries) {
 			
-				String fileName = entry.getFileName();
-				int locAdded = 0;
-				int maxLocAdded = 0;
-				double avgLocAdded = 0;
-				int locTouched = 0;
-				int locDeleted = 0;
-				int churn = 0;
-				int maxChurn = 0;
-				double avgChurn = 0;
-				int chgSetSize = 0;
-				int maxChgSetSize = 0;
-				double avgChgSetSize = 0;
-				int nR = 0;
+			String fileName = entry.getFileName();
+			int chgSetSize = 0;
+			int maxChgSetSize = 0;
+			int nR = 0;
+			locAdded = 0;
+			int maxLocAdded = 0;
+			double avgLocAdded = 0;
+			int locTouched = 0;
+			locDeleted = 0;
+			int churn = 0;
+			int maxChurn = 0;
+			double avgChurn = 0;
+			double avgChgSetSize = 0;
+			
+			Release release = entry.getRelease();
+			
+			
+			commitsLocAdded.clear();
+			commitsChurn.clear();
+			realChangeSet.clear();
+			avgMaxChgSetSize.clear();
+			authors.clear(); 
 				
-				Release release = entry.getRelease();
+			for(RevCommit commit : release.getReleaseCommits()) {
 				
+				String author = commit.getAuthorIdent().getName();
+			
+				changeSet.clear() ;
+				commitLocAdded = 0;
+				commitLocDeleted = 0;
+				int commitChurn = 0;
 				
-				commitsLocAdded.clear();
-				commitsChurn.clear();
-				realChangeSet.clear();
-				avgMaxChgSetSize.clear();
-				authors.clear(); 
+				RevCommit parent = null;
 				
-				for(RevCommit commit : release.getReleaseCommits()) {
-					
-					String author = commit.getAuthorIdent().getName();
+				DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
 				
-					changeSet.clear() ;
-					int commitLocAdded = 0;
-					int commitLocDeleted = 0;
-					int commitChurn = 0;
-					
-					RevCommit parent = null;
-					
-					if(commit.getParentCount()!=0) {
-						parent = commit.getParent(0);
+				List<DiffEntry> diffs = getDiffsForCommit(df,commit, parent, git);
 
-					}
+				boolean calculateChgSet = false ;
+				
+				for (DiffEntry diff : diffs) {    // For each file changed in the commit
 					
-					DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
-					df.setRepository(git.getRepository());
-					df.setDiffComparator(RawTextComparator.DEFAULT);
-					df.setDetectRenames(true);
-					List<DiffEntry> diffs;
-					if(parent != null) {
-							diffs = df.scan(parent.getTree(), commit.getTree());
-					}
-					else {
-						
-						RevWalk rw = new RevWalk(git.getRepository());
-						
-						ObjectReader reader = rw.getObjectReader();
-						diffs =df.scan(new EmptyTreeIterator(),
-						        new CanonicalTreeParser(null, reader, commit.getTree()));
-						 
-					}
-					
-					boolean calculateChgSet = false ;
-					
-					for (DiffEntry diff : diffs) {    // For each file changed in the commit
-						
-						String path;
-						
-						if(diff.getChangeType().toString().equals(TYPE_ADD) ) {
-							
-							path = diff.getNewPath().substring( diff.getNewPath().indexOf("/")+1);
-							path = path.replace("/", "\\");
-						}else {
-							
-							path = diff.getOldPath().substring( diff.getOldPath().indexOf("/")+1);
-							path = path.replace("/", "\\");
-							
-						}
-								
-						String alias = checkAlias(path,filesAlias);
-						String nameToBeUsed = null ;
-						
-						if( (alias!=null)  ){
-							
-							nameToBeUsed = alias;
-						
-						}else { 
-						
-							nameToBeUsed = path;
-						}
-								
-						if(!changeSet.contains(nameToBeUsed)) {
-							changeSet.add(nameToBeUsed);
-						}
-						
-						if(fileName.equals(nameToBeUsed) || fileName.contains(nameToBeUsed) ){
-							
-							nR++;
-							calculateChgSet = true;
-							if(!authors.contains(author)) {
-								authors.add(author);
-							}
 
-							for(Edit edit : df.toFileHeader(diff).toEditList()) {
-								
-									locAdded += edit.getEndB() - edit.getBeginB();
-									locDeleted += edit.getEndA() - edit.getBeginA();
-									commitLocAdded += edit.getEndB() - edit.getBeginB();
-									commitLocDeleted += edit.getEndA() - edit.getBeginA();
-
-							}
-						}
-					}
+					String nameToBeUsed = handleNameToBeUsed(diff, filesAlias, changeSet);
 					
-					if(calculateChgSet) {
-						avgMaxChgSetSize.add(changeSet.size());
-						for(int i = 0; i < changeSet.size();i++) {
-							if(!realChangeSet.contains(changeSet.get(i))) {
-								realChangeSet.add(changeSet.get(i));
-							}
-						}
+					if(fileName.equals(nameToBeUsed) || fileName.contains(nameToBeUsed) ){
+						
+						nR++;
+						calculateChgSet = true;
+						
+						checkAuthor(authors, author);
+
+						computeLocAddedAndDeleted(df, diff);
+						
 					}
-					commitChurn = commitLocAdded - commitLocDeleted;
-					commitsLocAdded.add(commitLocAdded);
-					commitsChurn.add(commitChurn);
 				}
+				
+				
+				evaluateTotalChgSetSize(calculateChgSet, avgMaxChgSetSize, changeSet, realChangeSet);
+				
+				commitChurn = commitLocAdded - commitLocDeleted;
+				commitsLocAdded.add(commitLocAdded);
+				commitsChurn.add(commitChurn);
+			}
 				
 			Collections.sort(commitsLocAdded);
 			maxLocAdded = commitsLocAdded.get(commitsLocAdded.size()-1);
 			double sum = 0;
-			for(int i=0; i < commitsLocAdded.size() ; i++) {
-				sum += commitsLocAdded.get(i);
-			}
+			sum = computeCommitsLocAdded(commitsLocAdded);
 			avgLocAdded = Math.round(sum/commitsLocAdded.size()) ;
 			
 			Collections.sort(commitsChurn);
 			maxChurn = commitsChurn.get(commitsChurn.size()-1);
 			double sumChurn = 0;
-			for(int i=0; i < commitsChurn.size() ; i++) {
-				sumChurn += commitsChurn.get(i);
-			}
+			sumChurn = computeCommitsChurn(commitsChurn);
 			avgChurn = Math.round(sumChurn/commitsChurn.size());
 			
 			chgSetSize = realChangeSet.size();
@@ -764,9 +840,7 @@ public class CalculateBugginess {
 			Collections.sort(avgMaxChgSetSize);
 			maxChgSetSize = avgMaxChgSetSize.get(avgMaxChgSetSize.size()-1);
 			double sumChgSetSize = 0;
-			for(int i=0; i < avgMaxChgSetSize.size() ; i++) {
-				sumChgSetSize += avgMaxChgSetSize.get(i);
-			}
+			sumChgSetSize = computeCommitsChgSetSize(avgMaxChgSetSize);
 			avgChgSetSize = Math.round(sumChgSetSize/avgMaxChgSetSize.size());
 					
 			locTouched = locAdded+locDeleted;
@@ -789,31 +863,473 @@ public class CalculateBugginess {
 			
 	}		
 	
+	public static void validateTickets(Release openingRelease,Release fixRelease,Ticket t,LocalDate creationDate,
+			LocalDate resolutionDate,List<Release> releasesArray) {
+		
+		
+		int openingVersion = openingRelease.getIndex();
+		int fixedVersion = fixRelease.getIndex();
+		int injectedVersion;
+		
+		if((fixedVersion-openingVersion) > 0) {
+			
+			injectedVersion = (int) Math.round(fixedVersion-(fixedVersion-openingVersion)*p);
+			
+			t.initializeAV();
+			
+			if(injectedVersion<1) {
+				
+				injectedVersion = 1;
+			}
+			
+			
+			LocalDate injectionDate = releasesArray.get(injectedVersion-1).getDate().toLocalDate();
+			
+			if( (injectionDate.compareTo(openingRelease.getDate().toLocalDate()) > 0) && (creationDate.compareTo(resolutionDate) <= 0 ) ) {
+				
+				invalidTicketsWithoutAV++;
+				invalidTickets++;
+				
+				if((fixedVersion-openingVersion) == 0) {
+					ticketWithFVEqualsToOVWithoutAV++;
+					ticketWithFVEqualsToOV++;
+				}
+				
+			}else {
+		
+				for(; (injectedVersion-1) < (fixedVersion-1) ; injectedVersion++) {
+					
+					AffectedVersion av = new AffectedVersion() ;
+					Release currentRelease = releasesArray.get(injectedVersion-1);
+					av.setId(currentRelease.getId());
+					av.setName(currentRelease.getName());
+					av.setDate(currentRelease.getDate().toLocalDate().toString());
+					t.getAffectedVersions().add(av);
+				}
+		
+			}
+		}else {
 	
+			ticketWithFVEqualsToOVWithoutAV++;
+			ticketWithFVEqualsToOV++;
+			
+		}
+	}
 	
+	public static boolean validateOvAndFv(Release openingRelease,Release fixRelease,int openingVersion,int fixedVersion) {
+		
+		if(openingRelease==null) {
+			
+			ticketsWithoutOpeningVersionWithoutAV++;
+			ticketsWithoutOpeningVersion++;	
+			
+		}else {
+			openingVersion = openingRelease.getIndex();
+		}
+		
+		
+					
+		if(fixRelease==null) {	
+			
+			ticketsWithoutFixedVersionWithoutAV++;
+			ticketsWithoutFixedVersion++;	
+			
+		}else {					
+			fixedVersion = fixRelease.getIndex();
+		}
+		
+		return ( (openingVersion!= 0) && (fixedVersion!= 0));
+	}
 	
+	public static void checkMovingTicketAndCalculateP(List<Ticket> movingTickets,List<Release> releasesArray) {
+		
+		if(!movingTickets.isEmpty()) {
+			
+			
+			calculatePOverTicketListWithoutMetrics(movingTickets,releasesArray);
+			
+			double sum = 0;
+			for(double d : proportionArray) {
+				
+				sum += d; 
+			}
+			
+			p = sum/proportionArray.size();
+			
+		}
+		
+	}
 	
+	public static void setupMovingWindow(List<Ticket> movingTickets,double movingWindow,List<Release> releasesArray,int i,List<Ticket> tickets) {
+		
+		
+			proportionArray.clear();
+			movingTickets.clear();
+			
+			int position = i ;
+			
+			//ricalcolo p usando l'ultimo 1% dei ticket processati
+			
+			for(int w = 1 ; w < movingWindow + 1; w++ ) {                                                                   
+				
+				if( (position-w) >=0) {
+					
+					Ticket movingTicket = tickets.get(position-w);
+					
+					//scarto i ticket non validi dalla movingWindow
+					
+					while(!checkTicket(movingTicket,releasesArray) && ((position-w) > 0)) {                                
+
+						position--;
+						movingTicket = tickets.get(position-w);
+					}
+					
+					if(checkTicket(movingTicket,releasesArray)) {
+						
+						movingTickets.add(movingTicket);
+				
+					}
+						
+				}
+			}
+			
+			checkMovingTicketAndCalculateP(movingTickets, releasesArray);
+		
+	}
 	
+	public static void calculateAvUsingProportion(Ticket t,double movingWindow,int ticketCounter,
+			List<Ticket> movingTickets,List<Release> releasesArray,int i,List<Ticket> tickets) {
+		
+		
+		if(t.getAffectedVersions().isEmpty()) {
+			
+			ticketsWithoutAV++;
+			
+			// posso scegleire quale modalita di moving window usare
+			
+			if((mode.equals(MODE_VARIABLE) && (movingWindow > 1) ) || (mode.equals(MODE_FIXED) &&  (ticketCounter >(movingWindow) ) )) {
+			
+				setupMovingWindow(movingTickets, movingWindow, releasesArray, i, tickets);
+				
+			}
+			
+			// se non ho attraversato il precedente if uso come p quello calcolato precedentemente su tutti i ticket aventi AV
+			
+			int openingVersion = 0;
+			int fixedVersion = 0;
+			
+			LocalDate creationDate = LocalDate.parse(t.getCreated().substring(0 , 10 ));
+			
+			LocalDate resolutionDate = LocalDate.parse(t.getResolutionDate().substring(0 , 10 ));
+			
+			if( creationDate.compareTo(resolutionDate) > 0) {       // check on dates consistency and remove incomplete tickets with inconsistent dates
+				
+				invalidTicketsWithoutAV++;
+				invalidTickets++;	
+				
+			}else {                                                                                         //acquiring indexes of the IV,OV,FV
+				
+				Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
+				Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);	
+				
+				boolean checkOvFv = validateOvAndFv(openingRelease, fixRelease, openingVersion, fixedVersion);
+			
+				
+				if(checkOvFv) {
+					
+					validateTickets(openingRelease, fixRelease, t, creationDate, resolutionDate, releasesArray);
+					
+				}
+			}	
+		}
+	}
 	
+	public static void retrieveCsvEntries(List<Release> releasesArray,List<FileNameAndSize> filePaths,List<RevCommit> commitList,Git git,List<DBEntry> dBEntries) throws IOException {
+		
+		for(Release r : releasesArray) {
+			filePaths.clear();
+			RevCommit rLatestCommit = getLatestCommitBeforeRelease(commitList,r.getDate());
+			if(rLatestCommit!=null) {
+
+				getFilesByCommitAndCalculateLoc(rLatestCommit,filePaths,git);
+				
+				for(FileNameAndSize fN : filePaths) {
+					
+					String filePath = fN.getFileName().substring( fN.getFileName().indexOf("/")+1);
+					filePath = filePath.replace("/", "\\");
+					int dotIndex = filePath.lastIndexOf('.');
+					if( ((dotIndex == -1) ? "" : filePath.substring(dotIndex + 1)).equals("java") ){
+						
+						DBEntry entry = new DBEntry();
+						entry.setRelease(r);
+						entry.setBugginess("no");
+						entry.setFileName(filePath);
+						entry.setSize(fN.getSize());
+						dBEntries.add(entry);
+					}
+				}
+			}
+		}
+	}
 	
+	public static void processAlias(List<FileAlias> filesAlias,String oldPath,String newPath) {
+		
+		boolean oPCheck = true;
+		boolean nPCheck = true;
+		
+		for(FileAlias fA : filesAlias) {
+			
+			if(!fA.checkAlias(oldPath)) {
+				oPCheck = false;
+				if(fA.checkAlias(newPath)) {
+					fA.getAlias().add(newPath);
+					nPCheck = false;
+				}
+			}
+			if(!fA.checkAlias(newPath)) {
+				nPCheck = false;
+				if(fA.checkAlias(oldPath)) {
+					fA.getAlias().add(oldPath);
+					oPCheck = false;
+				}
+			}
+		}
+
+		if(oPCheck && nPCheck) {
+			
+			FileAlias alias = new FileAlias();
+			alias.getAlias().add(oldPath);
+			alias.getAlias().add(newPath);
+			filesAlias.add(alias);
+			
+		}
+		
+	}
 	
+	public static void handleRenames(List<FileAlias> filesAlias,RevCommit commit,Git git) throws IOException {
+		
+		List<DiffEntry> entries = calculateDiffEntries(commit, git);
+		
+		if(!entries.isEmpty()) {
+			for( DiffEntry entry : entries ) {
+				
+				String type =  entry.getChangeType().toString();
+				String oldPath = entry.getOldPath().substring( entry.getOldPath().indexOf("/")+1);
+				String newPath = entry.getNewPath().substring( entry.getNewPath().indexOf("/")+1);
+				oldPath = oldPath.replace("/", "\\");
+				newPath = newPath.replace("/", "\\");
+				
+				int dotIndex = oldPath.lastIndexOf('.');
+				int dotIndex2 = newPath.lastIndexOf('.');
+				
+				if(type.equals("RENAME") && ((dotIndex == -1) ? "" : oldPath.substring(dotIndex + 1)).equals("java") && 
+						((dotIndex2 == -1) ? "" : newPath.substring(dotIndex2 + 1)).equals("java")) {
+					
+					
+					processAlias(filesAlias, oldPath, newPath);
+					
+				}
+			}
+		}
+	}
 	
+	public static void computeMainAlias(List<FileAlias> filesAlias,List<DBEntry> dBEntries) {
+		
+		for(DBEntry e : dBEntries) {
+			
+			String fileName = e.getFileName();
+			
+			for(FileAlias fA : filesAlias) {
+			
+				for(String alias : fA.getAlias()) {
+					
+					if(alias.equals(fileName) || e.getFileName().contains(alias)) {
+
+							fA.setLastFileName(alias);
+					}
+				}
+			}
+		}
+	}
 	
+	public static void assignMainAlias(List<FileAlias> filesAlias,List<DBEntry> dBEntries) {
+		
+		for(DBEntry e : dBEntries) {
+			
+			String fileName = e.getFileName();
+			
+			for(FileAlias fA : filesAlias) {
+			
+				for(String alias : fA.getAlias()) {
+					
+					if(alias.equals(fileName) || e.getFileName().contains(alias)) {
+
+							e.setFileName(fA.getLastFileName());
+					}
+				}
+			}
+		}
+	}
 	
+	public static String checkNameToBeUsed(String alias,String oldPath) {
+		
+		String nameToBeUsed;
+		
+		if( (alias!=null)  ){
+			
+			nameToBeUsed = alias;
+		
+		}else { 
+		
+			nameToBeUsed = oldPath;
+		}
+		
+		return nameToBeUsed;
+	}
 	
+	public static void setEntryBugginess(AffectedVersion av,List<DiffEntry> entries,List<DBEntry> dBEntries,List<FileAlias> filesAlias) {
+			
+		for( DiffEntry entry : entries) {
+			 
+			if(entry.getChangeType().toString().equals(TYPE_MODIFY) || entry.getChangeType().toString().equals(TYPE_DELETE)) {
+				
+				
+				String oldPath = entry.getOldPath().substring( entry.getOldPath().indexOf("/")+1);
+				oldPath = oldPath.replace("/", "\\");
+				
+				for(DBEntry e : dBEntries) {
+					
+					String alias = checkAlias(oldPath,filesAlias);
+					
+					String nameToBeUsed = checkNameToBeUsed(alias, oldPath) ;
+					
+					if((e.getRelease().getName().equals(av.getName()) ) && 
+							( e.getFileName().contains(nameToBeUsed) || e.getFileName().equals(nameToBeUsed))){
+						
+						e.setBugginess("yes");
+					}	
+				}	
+			}
+		}	
+	}
 	
+	public static void setBuggyFiles(List<DBEntry> dBEntries,List<FileAlias> filesAlias,List<RevCommit> commitList,List<Ticket> tickets,Git git) throws IOException {
+		
+		for(Ticket t : tickets) {
+			
+			if(!t.getAffectedVersions().isEmpty()) {
+				
+				List<RevCommit> fixedCommits = new ArrayList<>();
+				
+				retrieveAndSortCommitsForTicket(t,commitList,fixedCommits);
+				
+				if(!fixedCommits.isEmpty()) {
+						
+					for(int i=0;i<fixedCommits.size();i++) {
+						
+						List<DiffEntry> entries = calculateDiffEntries(fixedCommits.get(i), git);
+						
+						for(AffectedVersion av : t.getAffectedVersions()) {
+							
+							setEntryBugginess(av, entries, dBEntries, filesAlias);
+						}
+					}
+				}
+			}
+		}
+	}
 	
+	public static void setNullUknownBuggyFiles(List<DiffEntry> entries,List<DBEntry> dBEntries,List<FileAlias> filesAlias) {
+		
+		for( DiffEntry entry : entries) {
+			 
+			if(entry.getChangeType().toString().equals(TYPE_MODIFY) || entry.getChangeType().toString().equals(TYPE_DELETE)) {
+				
+				
+				String oldPath = entry.getOldPath().substring( entry.getOldPath().indexOf("/")+1);
+				oldPath = oldPath.replace("/", "\\");
+				
+				for(DBEntry e : dBEntries) {
+					
+					String alias = checkAlias(oldPath,filesAlias);
+					
+					String nameToBeUsed =  checkNameToBeUsed(alias, oldPath) ;
+					
+					if(( e.getFileName().contains(nameToBeUsed) || e.getFileName().equals(nameToBeUsed)) 
+							&& ( (e.isBugginess()!= null) && (e.isBugginess().equals("no")) )){
+						
+						e.setBugginess(null);
+					}	
+				}	
+			}
+		}
+	}
 	
+	public static void setNullBuggy(List<Ticket> tickets,List<RevCommit> commitList,Git git,List<DBEntry> dBEntries,List<FileAlias> filesAlias) throws IOException {
+		
+		for(Ticket t : tickets) {
+			
+			if(t.getAffectedVersions().isEmpty()) {
+				
+				List<RevCommit> fixedCommits = new ArrayList<>();
+				
+				retrieveAndSortCommitsForTicket(t,commitList,fixedCommits);
+				
+				if(!fixedCommits.isEmpty()) {
+						
+					for(int i=0;i<fixedCommits.size();i++) {
+						
+						List<DiffEntry> entries = calculateDiffEntries(fixedCommits.get(i), git);
 	
+						setNullUknownBuggyFiles(entries, dBEntries, filesAlias);
+					}
+				}
+			}
+		}
+	}
 	
+	public static void createNewCommitList(List<Release> newReleases,List<Release> releasesArray,List<RevCommit> commitList,List<RevCommit> newCommitList) {
+		
+		for (RevCommit commit : commitList) {
+			
+			LocalDateTime commitDate = Instant.ofEpochSecond(commit.getCommitTime()).atZone(ZoneId.of("UTC")).toLocalDateTime();
+			
+			for(Release release : newReleases ) {
+				if(release.getDate().compareTo(commitDate) > 0 ) {
+					release.getReleaseCommits().add(commit);
+				}
+			}
+			Release re = compareDateToReleasesArrayDateTime(releasesArray,commitDate);
+			
+			if(re.getIndex() != -1) {
+				newCommitList.add(commit);
+			}
+		}
+	}
 	
+	public static void createNewDBEntriesList(List<DBEntry> dBEntries,List<DBEntry> newDBEntries,int releaseIndex) {
+		
+		for(DBEntry entry :dBEntries ) {
+			
+			if( (entry.getRelease().getIndex() <= releaseIndex)  && (entry.isBugginess()!=null) ) {
+				
+				newDBEntries.add(entry);
+				
+			}
+		}
+	}
 	
-	
-	
-	
-	
+	public static void calculateSum(double sum) {
+		
+		for(double d : proportionArray) {
+			
+			sum += d; 
+		}
+	}
 	
 	public static void calculateBugginess(String projName,String path) throws  IOException, JSONException, GitAPIException {
+		
+		Log.infoLog("Inizio calcolo della bugginess dei file del progetto \n");
 		
 		List<FileAlias> filesAlias = new ArrayList<>();
 		int totalTickets = 0;
@@ -835,10 +1351,7 @@ public class CalculateBugginess {
 		
 		
 		double sum = 0;
-		for(double d : proportionArray) {
-			
-			sum += d; 
-		}
+		calculateSum(sum);
 		
 		p = sum/proportionArray.size();
 		
@@ -863,146 +1376,12 @@ public class CalculateBugginess {
 				
 			}
 			
-			if(t.getAffectedVersions().isEmpty()) {
-				
-				ticketsWithoutAV++;
-				
-				if((mode.equals(MODE_VARIABLE) && (movingWindow > 1) ) || (mode.equals(MODE_FIXED) &&  (ticketCounter >(movingWindow) ) )) {     // posso scegleire quale modalita di moving window usare
-					
-					proportionArray.clear();
-					movingTickets.clear();
-					
-					int position = i ;
-					
-					for(int w = 1 ; w < movingWindow + 1; w++ ) {                                                                   //ricalcolo p usando l'ultimo 1% dei ticket processati
-						
-						if( (position-w) >=0) {
-							
-							Ticket movingTicket = tickets.get(position-w);
-							
-							while(!checkTicket(movingTicket,releasesArray) && ((position-w) > 0)) {                                //scarto i ticket non validi dalla movingWindow
-		
-								position--;
-								movingTicket = tickets.get(position-w);
-							}
-							
-							if(checkTicket(movingTicket,releasesArray)) {
-								
-								movingTickets.add(movingTicket);
-						
-							}
-								
-						}
-					}
-					
-					if(!movingTickets.isEmpty()) {
-						
-						
-						calculatePOverTicketListWithoutMetrics(movingTickets,releasesArray);
-						
-						sum = 0;
-						for(double d : proportionArray) {
-							
-							sum += d; 
-						}
-						
-						p = sum/proportionArray.size();
-						
-					}
-				}
-				
-				
-				// se non ho attraversato il precedente if uso come p quello calcolato precedentemente su tutti i ticket aventi AV
-				
-				int openingVersion;
-				int fixedVersion;
-				int injectedVersion;
-				
-				LocalDate creationDate = LocalDate.parse(t.getCreated().substring(0 , 10 ));
-				
-				LocalDate resolutionDate = LocalDate.parse(t.getResolutionDate().substring(0 , 10 ));
-				
-				if( creationDate.compareTo(resolutionDate) > 0) {       // check on dates consistency and remove incomplete tickets with inconsistent dates
-					
-					invalidTicketsWithoutAV++;
-					invalidTickets++;	
-					
-				}else {                                                                                         //acquiring indexes of the IV,OV,FV
-					
-					Release openingRelease = compareDateToReleasesArray(releasesArray,creationDate);
-					if(openingRelease==null) {
-						
-						ticketsWithoutOpeningVersionWithoutAV++;
-						ticketsWithoutOpeningVersion++;	
-						openingVersion = 0;
-					}else {
-						openingVersion = openingRelease.getIndex();
-					}
-					
-					
-					Release fixRelease = compareDateToReleasesArray(releasesArray,resolutionDate);				
-					if(fixRelease==null) {	
-						
-						ticketsWithoutFixedVersionWithoutAV++;
-						ticketsWithoutFixedVersion++;	
-						fixedVersion = 0;
-					}else {					
-						fixedVersion = fixRelease.getIndex();
-					}
-				
-					
-					if((openingVersion!= 0) && (fixedVersion!= 0)) {
-						
-						if((fixedVersion-openingVersion) > 0) {
-							
-							injectedVersion = (int) Math.round(fixedVersion-(fixedVersion-openingVersion)*p);
-							
-							t.initializeAV();
-							
-							if(injectedVersion<1) {
-								
-								injectedVersion = 1;
-							}
-							
-							
-							LocalDate injectionDate = releasesArray.get(injectedVersion-1).getDate().toLocalDate();
-							
-							if( (injectionDate.compareTo(openingRelease.getDate().toLocalDate()) > 0) && (creationDate.compareTo(resolutionDate) <= 0 ) ) {
-								
-								invalidTicketsWithoutAV++;
-								invalidTickets++;
-								
-								if((fixedVersion-openingVersion) == 0) {
-									ticketWithFVEqualsToOVWithoutAV++;
-									ticketWithFVEqualsToOV++;
-								}
-								
-							}else {
-						
-								for(; (injectedVersion-1) < (fixedVersion-1) ; injectedVersion++) {
-									
-									AffectedVersion av = new AffectedVersion() ;
-									Release currentRelease = releasesArray.get(injectedVersion-1);
-									av.setId(currentRelease.getId());
-									av.setName(currentRelease.getName());
-									av.setDate(currentRelease.getDate().toLocalDate().toString());
-									t.getAffectedVersions().add(av);
-								}
-						
-							}
-						}else {
-					
-							ticketWithFVEqualsToOVWithoutAV++;
-							ticketWithFVEqualsToOV++;
-							
-						}
-					}
-				}	
-			}	
+			calculateAvUsingProportion(t, movingWindow, ticketCounter, movingTickets, releasesArray, i, tickets);
 		}
 
 		 String outputName = projName + "TicketMetrics.csv";
 		 
+		 Log.infoLog("Inizio scrittura del file csv relativo alle metriche dei ticket \n");
 		 
 		 try(FileWriter fileWriter = new FileWriter(outputName);) {
 	            
@@ -1051,17 +1430,21 @@ public class CalculateBugginess {
                fileWriter.append(String.valueOf(ticketsWithoutInjectionVersionWithoutAV));
                fileWriter.append("\n");
 
-	      
-	         } catch (Exception e) {
+               Log.infoLog("Scrittura del file delle metriche dei ticket completata con successo \n");
+               Log.infoLog("E' stato creato con successo il relativo file csv : " + outputName + "\n");
+               
+         } catch (Exception e) {
 
-	            Log.errorLog("Error in csv writer \n");
-		        StringWriter sw = new StringWriter();
-		        PrintWriter pw = new PrintWriter(sw);
-		        e.printStackTrace(pw);
-		        Log.errorLog(sw.toString());
-		        
-	         }
-	
+            Log.errorLog("Error in csv writer \n");
+	        StringWriter sw = new StringWriter();
+	        PrintWriter pw = new PrintWriter(sw);
+	        e.printStackTrace(pw);
+	        Log.errorLog(sw.toString());
+	        
+         }
+		 
+		Log.infoLog("Inizio calcolo delle metriche relative alla bugginess \n");
+
 		File f = new File(path);
 		
 		if(!f.exists()) {
@@ -1085,11 +1468,12 @@ public class CalculateBugginess {
 		
 		
 		//lavoro con commit la cui data sia minore della data dell'ultima release che considero
+		
 		for (RevCommit commitLog : projLog) {
 			
 			LocalDateTime commitDate = Instant.ofEpochSecond(commitLog.getCommitTime()).atZone(ZoneId.of("UTC")).toLocalDateTime();
 			
-			if(compareDateToReleasesArrayDateTime(releasesArray,commitDate)!=null) {
+			if(compareDateToReleasesArrayDateTime(releasesArray,commitDate).getIndex() != -1) {
 				commitList.add(commitLog);
 			}
 		}
@@ -1106,236 +1490,34 @@ public class CalculateBugginess {
 		
 		
 		// calcolo per ogni release i file presenti in quel momento
-		
-		
-		for(Release r : releasesArray) {
-				filePaths.clear();
-				RevCommit rLatestCommit = getLatestCommitBeforeRelease(commitList,r.getDate());
-				if(rLatestCommit!=null) {
-	
-					getFilesByCommitAndCalculateLoc(rLatestCommit,filePaths,git);
-					
-					for(FileNameAndSize fN : filePaths) {
-						
-						String filePath = fN.getFileName().substring( fN.getFileName().indexOf("/")+1);
-						filePath = filePath.replace("/", "\\");
-						int dotIndex = filePath.lastIndexOf('.');
-						if( ((dotIndex == -1) ? "" : filePath.substring(dotIndex + 1)).equals("java") ){
-							
-							DBEntry entry = new DBEntry();
-							entry.setRelease(r);
-							entry.setBugginess("no");
-							entry.setFileName(filePath);
-							entry.setSize(fN.getSize());
-							dBEntries.add(entry);
-						}
-					}
-				}
-		}
+		retrieveCsvEntries(releasesArray, filePaths, commitList, git, dBEntries);
 		
 		
 		//gestisco la presenza di eventuali rename e quindi alias tra i file
+		for(RevCommit commit : commitList) {
 		
-		for(RevCommit commit:commitList) {
-			
-			List<DiffEntry> entries = calculateDiffEntries(commit, git);
-			
-			if(!entries.isEmpty()) {
-				for( DiffEntry entry : entries ) {
-					
-					String type =  entry.getChangeType().toString();
-					String oldPath = entry.getOldPath().substring( entry.getOldPath().indexOf("/")+1);
-					String newPath = entry.getNewPath().substring( entry.getNewPath().indexOf("/")+1);
-					oldPath = oldPath.replace("/", "\\");
-					newPath = newPath.replace("/", "\\");
-					
-					int dotIndex = oldPath.lastIndexOf('.');
-					int dotIndex2 = newPath.lastIndexOf('.');
-					
-					if(type.equals("RENAME") && ((dotIndex == -1) ? "" : oldPath.substring(dotIndex + 1)).equals("java") && 
-							((dotIndex2 == -1) ? "" : newPath.substring(dotIndex2 + 1)).equals("java")) {
-						
-						
-						boolean oPCheck = true;
-						boolean nPCheck = true;
-						
-						for(FileAlias fA : filesAlias) {
-							
-							if(!fA.checkAlias(oldPath)) {
-								oPCheck = false;
-								if(fA.checkAlias(newPath)) {
-									fA.getAlias().add(newPath);
-									nPCheck = false;
-								}
-							}
-							if(!fA.checkAlias(newPath)) {
-								nPCheck = false;
-								if(fA.checkAlias(oldPath)) {
-									fA.getAlias().add(oldPath);
-									oPCheck = false;
-								}
-							}
-						}
-	
-						if(oPCheck && nPCheck) {
-							
-							FileAlias alias = new FileAlias();
-							alias.getAlias().add(oldPath);
-							alias.getAlias().add(newPath);
-							filesAlias.add(alias);
-							
-						}	
-					}
-				}
-			}
+			handleRenames(filesAlias, commit, git);
+		
 		}
 		
 		
 		// per ogni insieme di alias di ogni file calcolo il nome piu recente ad esso assocaito 
-		
-		for(DBEntry e : dBEntries) {
-			
-			String fileName = e.getFileName();
-			
-			for(FileAlias fA : filesAlias) {
-			
-				for(String alias : fA.getAlias()) {
-					
-					if(alias.equals(fileName) || e.getFileName().contains(alias)) {
-
-							fA.setLastFileName(alias);
-					}
-				}
-			}
-		}
+		computeMainAlias(filesAlias, dBEntries);
 		
 		
 		//per ogni DBEntry dotata di alias, imposto il nome del file come l'ultimo tra gli alias con cui è conosciuto
-		
-		for(DBEntry e : dBEntries) {
-			
-			String fileName = e.getFileName();
-			
-			for(FileAlias fA : filesAlias) {
-			
-				for(String alias : fA.getAlias()) {
-					
-					if(alias.equals(fileName) || e.getFileName().contains(alias)) {
-
-							e.setFileName(fA.getLastFileName());
-					}
-				}
-			}
-		}
+		assignMainAlias(filesAlias, dBEntries);
 		
 		
 		//calcolo la bugginess di ogni file 
+		setBuggyFiles(dBEntries, filesAlias, commitList, tickets, git);
 		
-		for(Ticket t : tickets) {
-			
-			if(!t.getAffectedVersions().isEmpty()) {
-				
-				List<RevCommit> fixedCommits = new ArrayList<>();
-				
-				retrieveAndSortCommitsForTicket(t,commitList,fixedCommits);
-				
-				if(!fixedCommits.isEmpty()) {
-						
-					for(int i=0;i<fixedCommits.size();i++) {
-						
-						List<DiffEntry> entries = calculateDiffEntries(fixedCommits.get(i), git);
-						
-						for(AffectedVersion av : t.getAffectedVersions()) {
-						
-							for( DiffEntry entry : entries) {
-								 
-								if(entry.getChangeType().toString().equals(TYPE_MODIFY) || entry.getChangeType().toString().equals(TYPE_DELETE)) {
-									
-									
-									String oldPath = entry.getOldPath().substring( entry.getOldPath().indexOf("/")+1);
-									oldPath = oldPath.replace("/", "\\");
-									
-									for(DBEntry e : dBEntries) {
-										
-										String alias = checkAlias(oldPath,filesAlias);
-										String nameToBeUsed = null ;
-										
-										if( (alias!=null)  ){
-											
-											nameToBeUsed = alias;
-										
-										}else { 
-										
-											nameToBeUsed = oldPath;
-										}
-										
-										if((e.getRelease().getName().equals(av.getName()) ) && 
-												( e.getFileName().contains(nameToBeUsed) || e.getFileName().equals(nameToBeUsed))){
-											
-											e.setBugginess("yes");
-										}	
-									}	
-								}
-							}
-						}
-					}
-				}
-			}
-		}
 		
-	
-		for(Ticket t : tickets) {
-			
-			if(t.getAffectedVersions().isEmpty()) {
-				
-				List<RevCommit> fixedCommits = new ArrayList<>();
-				
-				retrieveAndSortCommitsForTicket(t,commitList,fixedCommits);
-				
-				if(!fixedCommits.isEmpty()) {
-						
-					for(int i=0;i<fixedCommits.size();i++) {
-						
-						List<DiffEntry> entries = calculateDiffEntries(fixedCommits.get(i), git);
-	
-						for( DiffEntry entry : entries) {
-							 
-							if(entry.getChangeType().toString().equals(TYPE_MODIFY) || entry.getChangeType().toString().equals(TYPE_DELETE)) {
-								
-								
-								String oldPath = entry.getOldPath().substring( entry.getOldPath().indexOf("/")+1);
-								oldPath = oldPath.replace("/", "\\");
-								
-								for(DBEntry e : dBEntries) {
-									
-									String alias = checkAlias(oldPath,filesAlias);
-									String nameToBeUsed = null ;
-									
-									if( (alias!=null)  ){
-										
-										nameToBeUsed = alias;
-									
-									}else { 
-									
-										nameToBeUsed = oldPath;
-									}
-									
-									if(( e.getFileName().contains(nameToBeUsed) || e.getFileName().equals(nameToBeUsed)) 
-											&& ( (e.isBugginess()!= null) && (e.isBugginess().equals("no")) )){
-										
-										e.setBugginess(null);
-									}	
-								}	
-							}
-						}
-					}
-				}
-			}
-		}
+		//imposto a null la bugginess dei file che so essere buggy ma non in quale release
+		setNullBuggy(tickets, commitList, git, dBEntries, filesAlias);
 		
 	
 		//riduco di metà le releases
-		
 		List<Release> newReleases = new ArrayList<>();
 		
 		for(int i=0; i<releasesSize; i++) {
@@ -1347,19 +1529,7 @@ public class CalculateBugginess {
 		
 		List<RevCommit> newCommitList = new ArrayList<>();
 		
-		for (RevCommit commit : commitList) {
-			
-			LocalDateTime commitDate = Instant.ofEpochSecond(commit.getCommitTime()).atZone(ZoneId.of("UTC")).toLocalDateTime();
-			
-			for(Release release : newReleases ) {
-				if(release.getDate().compareTo(commitDate) > 0 ) {
-					release.getReleaseCommits().add(commit);
-				}
-			}
-			if(compareDateToReleasesArrayDateTime(releasesArray,commitDate)!=null) {
-				newCommitList.add(commit);
-			}
-		}
+		createNewCommitList(newReleases, releasesArray, commitList, newCommitList);
 		
 		//ordino la lista dei commit temporalmente dal piu vecchio al piu giovane
 		
@@ -1377,15 +1547,7 @@ public class CalculateBugginess {
 		List<DBEntry> newDBEntries = new ArrayList<>();
 		int releaseIndex = newReleases.get(newReleases.size() - 1).getIndex();
 		
-		for(DBEntry entry :dBEntries ) {
-			
-			if( (entry.getRelease().getIndex() <= releaseIndex)  && (entry.isBugginess()!=null) ) {
-				
-				newDBEntries.add(entry);
-				
-			}
-			
-		}
+		createNewDBEntriesList(dBEntries, newDBEntries, releaseIndex);
 		
 		//calcolo delle metriche eccetto Size che è stata calcolata durante il retrieval dei filepaths 
 		
@@ -1400,13 +1562,12 @@ public class CalculateBugginess {
 		
 		 
 		 // ordino le DBEntry in base all indice di versione
-		 
 		 Collections.sort(dBEntries, (e1, e2) -> Integer.compare(e1.getRelease().getIndex(), e2.getRelease().getIndex()));
 				
 		//Name of CSV for output
-		 
 		 String outname = projName + "Bugginess.csv";
 		 
+		 Log.infoLog("Inizio scrittura del file csv relativo alle metriche ed alla bugginess \n");
 		 
 		 try(FileWriter fileWriter = new FileWriter(outname);) {
 	            
@@ -1455,6 +1616,10 @@ public class CalculateBugginess {
 	               }
 
 	            }
+	            
+	            Log.infoLog("Scrittura del file delle metriche e della bugginess completata con successo \n");
+	            Log.infoLog("E' stato creato con successo il relativo file csv : " + outname + "\n");
+	               
 	         } catch (Exception e) {
 
 	            Log.errorLog("Error in csv writer \n");

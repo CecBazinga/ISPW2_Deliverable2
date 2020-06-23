@@ -2,29 +2,297 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2020-03-22T21:04:37</date>
-  <millis>1584907477979</millis>
+  <date>2020-06-23T00:04:34</date>
+  <millis>1592863474918</millis>
   <sequence>0</sequence>
   <logger>global</logger>
   <level>INFO</level>
   <class>logic.Log</class>
   <method>infoLog</method>
   <thread>1</thread>
-  <message>This is the real Hello Wolrd ! </message>
+  <message>Inizio calcolo dei bug risolti per mese 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477168</millis>
+  <sequence>1</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Calcolo dei bug risolti per mese completato con successo 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477169</millis>
+  <sequence>2</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : Bookkeeper.csv
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477173</millis>
+  <sequence>3</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo della bugginess dei file del progetto 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477513</millis>
+  <sequence>4</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio scrittura del file csv relativo alle metriche dei ticket 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477515</millis>
+  <sequence>5</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Scrittura del file delle metriche dei ticket completata con successo 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477515</millis>
+  <sequence>6</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : BookkeeperTicketMetrics.csv
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:04:37</date>
+  <millis>1592863477515</millis>
+  <sequence>7</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo delle metriche relative alla bugginess 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:24:41</date>
+  <millis>1592864681839</millis>
+  <sequence>8</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo metriche : 
+
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:29:56</date>
+  <millis>1592864996278</millis>
+  <sequence>9</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio scrittura del file csv relativo alle metriche ed alla bugginess 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:29:56</date>
+  <millis>1592864996301</millis>
+  <sequence>10</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Scrittura del file delle metriche e della bugginess completata con successo 
+</message>
+</record>
+<record>
+  <date>2020-06-23T00:29:56</date>
+  <millis>1592864996301</millis>
+  <sequence>11</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : BookkeeperBugginess.csv
+</message>
 </record>
 </log>
 <?xml version="1.0" encoding="windows-1252" standalone="no"?>
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2020-03-22T21:07:35</date>
-  <millis>1584907655733</millis>
+  <date>2020-06-23T01:55:28</date>
+  <millis>1592870128744</millis>
   <sequence>0</sequence>
   <logger>global</logger>
   <level>INFO</level>
   <class>logic.Log</class>
   <method>infoLog</method>
   <thread>1</thread>
-  <message>This is the real Hello Wolrd ! </message>
+  <message>Inizio calcolo dei bug risolti per mese 
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131118</millis>
+  <sequence>1</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Calcolo dei bug risolti per mese completato con successo 
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131119</millis>
+  <sequence>2</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : Bookkeeper.csv
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131123</millis>
+  <sequence>3</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo della bugginess dei file del progetto 
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131468</millis>
+  <sequence>4</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio scrittura del file csv relativo alle metriche dei ticket 
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131469</millis>
+  <sequence>5</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Scrittura del file delle metriche dei ticket completata con successo 
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131469</millis>
+  <sequence>6</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : BookkeeperTicketMetrics.csv
+</message>
+</record>
+<record>
+  <date>2020-06-23T01:55:31</date>
+  <millis>1592870131470</millis>
+  <sequence>7</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo delle metriche relative alla bugginess 
+</message>
+</record>
+<record>
+  <date>2020-06-23T02:14:15</date>
+  <millis>1592871255163</millis>
+  <sequence>8</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo metriche : 
+
+</message>
+</record>
+<record>
+  <date>2020-06-23T02:18:59</date>
+  <millis>1592871539903</millis>
+  <sequence>9</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio scrittura del file csv relativo alle metriche ed alla bugginess 
+</message>
+</record>
+<record>
+  <date>2020-06-23T02:18:59</date>
+  <millis>1592871539926</millis>
+  <sequence>10</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Scrittura del file delle metriche e della bugginess completata con successo 
+</message>
+</record>
+<record>
+  <date>2020-06-23T02:18:59</date>
+  <millis>1592871539926</millis>
+  <sequence>11</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : BookkeeperBugginess.csv
+</message>
 </record>
 </log>

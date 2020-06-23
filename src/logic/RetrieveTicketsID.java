@@ -73,12 +73,10 @@ public class RetrieveTicketsID {
          JSONObject json = readJsonFromUrl(url);
          JSONArray issues = json.getJSONArray("issues");
          total = json.getInt("total");
-         Log.infoLog("Le key di tutti i ticket di tipo bug fixed sono : \n");
          for (; i < total && i < j; i++) {
             //Iterate through each bug
             String key = issues.getJSONObject(i%1000).get("key").toString();
             tickets.add(key);
-            Log.infoLog(key+"\n");
          }  
       } while (i < total);
    }

@@ -65,16 +65,10 @@ public final class EvaluateFixedBugs {
 		
 		for(String ticket : tickets) {                                      // for every ticket gets the last commit relative to it
 			
-			
-			Log.infoLog(ticket + " " +"\n\n");
-			
 			List<RevCommit> fixedCommits = new ArrayList<>();
 
-			
 			for (RevCommit commit : commitList) {
 				
-				
-				Log.infoLog(commit  +"\n");
 				if(commit.getFullMessage().contains((ticket + " "))) {        //gets all commits which contain same ticket ID
 					fixedCommits.add(commit);
 					if(commit.getAuthorIdent().getWhen()== null) {
@@ -94,19 +88,11 @@ public final class EvaluateFixedBugs {
 		int year1 = calendar1.get(Calendar.YEAR);
 		int month1= calendar1.get(Calendar.MONTH)+1;
 		
-		Log.infoLog("l anno iniziale è : " + year1 + "\n");
-		Log.infoLog("il mese iniziale è : " + month1 + "\n");
-		
 		Calendar calendar2 = toCalendar(latestCommitsDates.get(latestCommitsDates.size()-1));
 		int year2 = calendar2.get(Calendar.YEAR);
 		int month2= calendar2.get(Calendar.MONTH)+1;
 		
-		Log.infoLog("l anno finale è : " + year2 + "\n");
-		Log.infoLog("il mese finale è : " + month2 + "\n");
-		
-		
 		int totalMonths = (year2-year1)*12 + (month2-month1) +1;
-		Log.infoLog("mesi totali : " + totalMonths + "\n");
 		
 		int month = month1;
 		int year =  year1 ;
@@ -122,7 +108,6 @@ public final class EvaluateFixedBugs {
 			else {
 				monthDate = month + "-"+ year;
 			}
-			Log.infoLog("mese : " + monthDate + "\n");
 			graphMonths.add(new GraphMonth(monthDate,bugsPerMonth));
 			month = month+1;
 		}
@@ -130,9 +115,9 @@ public final class EvaluateFixedBugs {
 	
 	public static void evaluate(String projName,String path) throws IOException, JSONException, GitAPIException{
 		
+		Log.infoLog("Inizio calcolo dei bug risolti per mese \n");
 		
-		
-		String csvName = path+"\\"+ projName+".csv" ;
+		String csvName = projName + ".csv" ;
 				
 		File f = new File(path);
 		
@@ -156,19 +141,11 @@ public final class EvaluateFixedBugs {
 	
 		}
 		
-		int ticketsNumber = tickets.size();
 		latestCommitsDates = new ArrayList<>();
 		graphMonths = new ArrayList<>();
 		
 		handleCommitWithoutDate(tickets,commitList);
-		
-		
-		Log.infoLog("i ticket totali sono : " + ticketsNumber + "\n");
-		Log.infoLog("i ticket senza alcun commit sono : " + ticketWithoutCommit + "\n");
-		Log.infoLog("le date totali sono : " + latestCommitsDates.size() + "\n");
-		Log.infoLog("le date sono : " + latestCommitsDates + "\n");
 			 
-		
 		Collections.sort(latestCommitsDates, (o1, o2) ->  o1.compareTo(o2));
         
 		initializeBugsPerMonth();
@@ -195,7 +172,6 @@ public final class EvaluateFixedBugs {
 					
 			}
 			monthBugs.setFixedBugs(bugsPerMonth);
-			Log.infoLog("bug risolti : " + monthBugs.getBugsNumber() + "\n");
 		}
 		
 		
@@ -220,10 +196,13 @@ public final class EvaluateFixedBugs {
 	        }
 	        // closing writer connection 
 	        writer.close(); 
+	        
+	        Log.infoLog("Calcolo dei bug risolti per mese completato con successo \n");
+	        Log.infoLog("E' stato creato con successo il relativo file csv : " + csvName + "\n");
 	    } 
 	    catch (IOException e) { 
 	    	
-	        Log.errorLog("Errore nella scrittura del csv \n");
+	        Log.errorLog("Errore nella scrittura del csv dei bug risolti per mese \n");
 	        StringWriter sw = new StringWriter();
 	        PrintWriter pw = new PrintWriter(sw);
 	        e.printStackTrace(pw);
