@@ -11,10 +11,13 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		String projName = "Bookkeeper" ;
+		//String projName = "Bookkeeper" ;
+		String projName = "OpenJPA" ;
+		
 		String path ="C:\\Users\\Utente\\Desktop\\ISPW2\\Falessi\\progetti\\"+projName;
 		
 		Log.setupLogger();
+		int releasesSize = 0;
 		
 		try {
 			EvaluateFixedBugs.evaluate(projName,path);
@@ -30,7 +33,7 @@ public class Main {
 		
 		try {
 			
-			CalculateBugginess.calculateBugginess(projName, path);
+			releasesSize = CalculateBugginess.calculateBugginess(projName, path);
 			
 		} catch (IOException | JSONException | GitAPIException e) {
 			
@@ -42,6 +45,18 @@ public class Main {
 		}
 		
 		
+		try {
+			
+			TrainClassifiers.train(projName,releasesSize);
+			
+		} catch (Exception e) {
+			
+			Log.errorLog("Error while training classifiers \n");
+	        StringWriter sw = new StringWriter();
+	        e.printStackTrace(new PrintWriter(sw));
+	        Log.errorLog(sw.toString());
+	        
+		}
 		
 	}
 

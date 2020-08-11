@@ -123,7 +123,7 @@ public final class EvaluateFixedBugs {
 		
 		if(!f.exists()) {
 		Git.cloneRepository()
-		  .setURI("https://github.com/apache/"+ projName.toLowerCase())
+		  .setURI("https://github.com/apache/"+ projName)
 		  .setDirectory(new File(path))
 		  .call();
 		}

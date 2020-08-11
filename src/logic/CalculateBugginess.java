@@ -85,6 +85,8 @@ public class CalculateBugginess {
 	private static int ticketsWithoutAV = 0;
 	private static int ticketsWithAV = 0;
 	
+	protected static int corruptedAVFieldInTickets= 0;
+	
 	
 	
 	
@@ -1215,22 +1217,27 @@ public class CalculateBugginess {
 	
 	public static void setBuggyFiles(List<DBEntry> dBEntries,List<FileAlias> filesAlias,List<RevCommit> commitList,List<Ticket> tickets,Git git) throws IOException {
 		
+		System.out.println(tickets.size());
+		
 		for(Ticket t : tickets) {
 			
+			System.out.println("Sto lavorando con il ticket : "+ t.getKey()+"\n");
 			if(!t.getAffectedVersions().isEmpty()) {
 				
 				List<RevCommit> fixedCommits = new ArrayList<>();
 				
 				retrieveAndSortCommitsForTicket(t,commitList,fixedCommits);
+				System.out.println("Step 1 \n");
 				
 				if(!fixedCommits.isEmpty()) {
 						
 					for(int i=0;i<fixedCommits.size();i++) {
 						
+						System.out.println("Step 2 \n");
 						List<DiffEntry> entries = calculateDiffEntries(fixedCommits.get(i), git);
-						
+						System.out.println("Step 3 \n");
 						for(AffectedVersion av : t.getAffectedVersions()) {
-							
+							System.out.println("Step 4 \n");
 							setEntryBugginess(av, entries, dBEntries, filesAlias);
 						}
 					}
@@ -1327,7 +1334,7 @@ public class CalculateBugginess {
 		}
 	}
 	
-	public static void calculateBugginess(String projName,String path) throws  IOException, JSONException, GitAPIException {
+	public static int calculateBugginess(String projName,String path) throws  IOException, JSONException, GitAPIException {
 		
 		Log.infoLog("Inizio calcolo della bugginess dei file del progetto \n");
 		
@@ -1335,7 +1342,7 @@ public class CalculateBugginess {
 		int totalTickets = 0;
 		
 		List<Ticket> tickets = new ArrayList<>();                      //creates a list containig all tickets IDs,CreationDate,ResolutionDate, AV relative to fixed bugs
-		RetrieveTicketsID.getFixedTicketList(projName,tickets);
+		corruptedAVFieldInTickets = RetrieveTicketsID.getFixedTicketList(projName,tickets);
 		totalTickets = tickets.size();
 		
 		List<Release> releasesArray= new  ArrayList<>() ;
@@ -1428,6 +1435,8 @@ public class CalculateBugginess {
                fileWriter.append(String.valueOf(aVticketsWithoutInjectionVersion));
                fileWriter.append(",");
                fileWriter.append(String.valueOf(ticketsWithoutInjectionVersionWithoutAV));
+               fileWriter.append(",");
+               fileWriter.append(String.valueOf(corruptedAVFieldInTickets));
                fileWriter.append("\n");
 
                Log.infoLog("Scrittura del file delle metriche dei ticket completata con successo \n");
@@ -1449,7 +1458,7 @@ public class CalculateBugginess {
 		
 		if(!f.exists()) {
 		Git.cloneRepository()
-		  .setURI("https://github.com/apache/"+ projName)                  //projname potrebbe dover essere maiuscolo
+		  .setURI("https://github.com/apache/"+ projName)                 
 		  .setDirectory(new File(path))
 		  .call();
 		}
@@ -1492,7 +1501,8 @@ public class CalculateBugginess {
 		// calcolo per ogni release i file presenti in quel momento
 		retrieveCsvEntries(releasesArray, filePaths, commitList, git, dBEntries);
 		
-		
+		Log.infoLog("calcolo dei file presenti in ogni release terminato \n");
+		Log.infoLog("Numero totale dei files : " + dBEntries.size() + "\n");
 		//gestisco la presenza di eventuali rename e quindi alias tra i file
 		for(RevCommit commit : commitList) {
 		
@@ -1508,14 +1518,12 @@ public class CalculateBugginess {
 		//per ogni DBEntry dotata di alias, imposto il nome del file come l'ultimo tra gli alias con cui è conosciuto
 		assignMainAlias(filesAlias, dBEntries);
 		
+		Log.infoLog("gestione degli alias di ogni file terminata \n");
 		
 		//calcolo la bugginess di ogni file 
 		setBuggyFiles(dBEntries, filesAlias, commitList, tickets, git);
 		
-		
-		//imposto a null la bugginess dei file che so essere buggy ma non in quale release
-		setNullBuggy(tickets, commitList, git, dBEntries, filesAlias);
-		
+		Log.infoLog("calcolo bugginess dei file terminato \n");
 	
 		//riduco di metà le releases
 		List<Release> newReleases = new ArrayList<>();
@@ -1531,6 +1539,7 @@ public class CalculateBugginess {
 		
 		createNewCommitList(newReleases, releasesArray, commitList, newCommitList);
 		
+		newCommitList = commitList;
 		//ordino la lista dei commit temporalmente dal piu vecchio al piu giovane
 		
 		Collections.sort(newCommitList, (c1, c2) -> {
@@ -1551,11 +1560,14 @@ public class CalculateBugginess {
 		
 		//calcolo delle metriche eccetto Size che è stata calcolata durante il retrieval dei filepaths 
 		
+		Log.infoLog("Avvio calcolo delle metriche buggy \n");
 		
 		calculateNFix(newCommitList,tickets,newDBEntries,git,filesAlias);
 		
 		
 		calculateMetrics(git,newDBEntries,filesAlias);
+		
+		Log.infoLog("Termine calcolo delle metriche buggy \n");
 	
 
 		//create bugginess CSV
@@ -1629,6 +1641,8 @@ public class CalculateBugginess {
 		        Log.errorLog(sw.toString());
 		        
 	         }
+		 
+		 return releasesSize;
 	   }
 	}
 	

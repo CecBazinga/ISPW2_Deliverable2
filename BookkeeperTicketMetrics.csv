@@ -1,2 +1,2 @@
 totalTickets , ticketsWithAV , ticketsWithoutAV , invalidTickets , AVInvalidTickets  , invalidTicketsWithoutAV , ticketsWithoutFixedVersion  , AVticketsWithoutFixedVersion , ticketsWithoutFixedVersionWithoutAV , ticketsWithoutOpeningVersion , AVticketsWithoutOpeningVersionticketsWithoutOpeningVersionWithoutAV , ticketWithFVEqualsToOV , AVticketWithFVEqualsToOV , ticketWithFVEqualsToOVWithoutAV , ticketsWithoutInjectionVersion , AVticketsWithoutInjectionVersion , ticketsWithoutInjectionVersionWithoutAV 
-435,170,265,18,18,0,0,0,0,0,0,0,376,146,230,0,0,0
+435,170,265,18,18,0,0,0,0,0,0,0,376,146,230,0,0,0,0

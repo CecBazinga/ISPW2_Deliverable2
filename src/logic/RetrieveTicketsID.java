@@ -81,15 +81,44 @@ public class RetrieveTicketsID {
       } while (i < total);
    }
   	
+    public static int getAVInfo(JSONArray affectedVersions,Ticket ticket) {
+    	
+    	int v=0;
+    	int corruptedAVs = 0;
+    	
+        for(; v < affectedVersions.length();v++) {
+      	  
+      	  try {
+      		  
+          	  String aVRealeaseDate = affectedVersions.getJSONObject(v).get("releaseDate").toString();
+          	  String aVName = affectedVersions.getJSONObject(v).get("name").toString();
+          	  String aVId = affectedVersions.getJSONObject(v).get("id").toString();
+          	  
+          	  AffectedVersion aV = new AffectedVersion();
+          	  aV.setDate(aVRealeaseDate);
+          	  aV.setName(aVName);
+          	  aV.setId(aVId);
+          	  
+          	  ticket.getAffectedVersions().add(aV);
+          	  
+      	  }catch(JSONException e) {
+      		  
+      		corruptedAVs++;
+      	  }
+        }
+        
+        return corruptedAVs;
+    }
   	
-  	public static void getFixedTicketList(String projName,List<Ticket> tickets) throws IOException, JSONException {
+  	
+  	public static int getFixedTicketList(String projName,List<Ticket> tickets) throws IOException, JSONException {
 		   
   	  Integer j = 0;
   	  Integer i = 0;
   	  Integer total = 1;
   	  String field = "fields";
         //Get JSON API for closed bugs w/ AV in the project
-  	  
+  	  int corruptedAVFieldInTickets = 0;
   	  
         do {
         
@@ -121,32 +150,19 @@ public class RetrieveTicketsID {
               ticket.setCreated(createdDate);
               ticket.setResolutionDate(resolutionDate);
               
-              if(affectedVersions!=null) {
+              if(affectedVersions!=null ) {
             	  
             	  ticket.initializeAV();
             	  
-            	  int v=0;
-            	  
-	              for(; v < affectedVersions.length();v++) {
-	            	  
-	            	  String aVRealeaseDate = affectedVersions.getJSONObject(v).get("releaseDate").toString();
-	            	  String aVName = affectedVersions.getJSONObject(v).get("name").toString();
-	            	  String aVId = affectedVersions.getJSONObject(v).get("id").toString();
-	            	  
-	            	  AffectedVersion aV = new AffectedVersion();
-	            	  aV.setDate(aVRealeaseDate);
-	            	  aV.setName(aVName);
-	            	  aV.setId(aVId);
-	            	  
-	            	  ticket.getAffectedVersions().add(aV);
-	            	  
-	              }
+            	  corruptedAVFieldInTickets += getAVInfo(affectedVersions, ticket);
               }
              
               tickets.add(ticket);
            
            }  
         } while (i < total);
+        
+        return corruptedAVFieldInTickets;
      }
 }
 

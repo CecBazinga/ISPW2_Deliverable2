@@ -18,5 +18,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2/weka-stable-3.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2/SMOTE.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
