@@ -1,0 +1,2 @@
+totalTickets , ticketsWithAV , ticketsWithoutAV , invalidTickets , AVInvalidTickets  , invalidTicketsWithoutAV , ticketsWithoutFixedVersion  , AVticketsWithoutFixedVersion , ticketsWithoutFixedVersionWithoutAV , ticketsWithoutOpeningVersion , AVticketsWithoutOpeningVersionticketsWithoutOpeningVersionWithoutAV , ticketWithFVEqualsToOV , AVticketWithFVEqualsToOV , ticketWithFVEqualsToOVWithoutAV , ticketsWithoutInjectionVersion , AVticketsWithoutInjectionVersion , ticketsWithoutInjectionVersionWithoutAV 
+1071,877,194,100,100,0,3,3,0,2,2,0,698,581,117,2,2,0,135
