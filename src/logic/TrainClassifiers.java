@@ -58,6 +58,64 @@ public class TrainClassifiers {
 	}
 	
 	
+	public static void registerExceptionOnLog(Exception e, String msg) {
+		
+		Log.errorLog(msg);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        Log.errorLog(sw.toString());
+	}
+	
+	
+	public static WekaDBEntry fillWekaEntry(Instances training , Instances test,String classifierName,
+			int numReleaseTraining,String arffName,String fS , Evaluation eval ) {
+		
+		
+		WekaDBEntry wekaEntry = new WekaDBEntry();
+		 
+		
+		int trainingSize = training.size();
+		int testSize = test.size();
+		int percentageDataTraining = (trainingSize*100)/dataSetDimension;
+		
+		int positiveInstancesTraining = calculateBuggyClassNumber(training);
+		int percentageDefectiveTraining = (positiveInstancesTraining*100)/trainingSize;
+		
+		int positiveInstancesTest = calculateBuggyClassNumber(test);
+		int percentageDefectiveTest = (positiveInstancesTest*100)/testSize;
+		
+		
+	   
+	    wekaEntry.setDataSet(arffName);
+	    if(eval!=null) {
+		    wekaEntry.setNumReleaseTraining(numReleaseTraining-1);
+		    wekaEntry.setClassifier(classifierName);
+		    wekaEntry.setAuc(eval.areaUnderROC(1));
+		    wekaEntry.setKappa(eval.kappa());
+		    wekaEntry.setPrecision(eval.precision(1));
+		    wekaEntry.setRecall(eval.recall(1));
+		    wekaEntry.setBalancing("None");
+		    wekaEntry.setPercentageDataTraining(percentageDataTraining);
+		    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
+		    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
+		    wekaEntry.settP(eval.numTruePositives(1));
+		    wekaEntry.setfP(eval.numFalsePositives(1));
+		    wekaEntry.settN(eval.numTrueNegatives(1));
+		    wekaEntry.setfN(eval.numFalseNegatives(1));
+	    }
+
+	    
+	    if(fS.equals(FEATURE_SELECTION_YES)) {
+	    	 wekaEntry.setFeatureSelection("BestFirst");
+	    }else if(fS.equals(FEATURE_SELECTION_NO)) {
+	    	 wekaEntry.setFeatureSelection("None");
+	    }
+	    
+	    return wekaEntry ;
+	}
+	
+	
 	
 	public static void evaluateClassifier(Instances training , Instances test,String classifierName,
 									int numReleaseTraining,String arffName,String fS)    {
@@ -96,49 +154,10 @@ public class TrainClassifiers {
 			 
 		}catch(Exception e) {
 			
-			Log.errorLog("Error while creating classifier \n");
-	        StringWriter sw = new StringWriter();
-	        PrintWriter pw = new PrintWriter(sw);
-	        e.printStackTrace(pw);
-	        Log.errorLog(sw.toString());
+			registerExceptionOnLog( e, "Error creating classifier ! \n" );
 	 }
 		
-		int trainingSize = training.size();
-		int testSize = test.size();
-		int percentageDataTraining = (trainingSize*100)/dataSetDimension;
-		
-		int positiveInstancesTraining = calculateBuggyClassNumber(training);
-		int percentageDefectiveTraining = (positiveInstancesTraining*100)/trainingSize;
-		
-		int positiveInstancesTest = calculateBuggyClassNumber(test);
-		int percentageDefectiveTest = (positiveInstancesTest*100)/testSize;
-		
-		
-	    WekaDBEntry wekaEntry = new WekaDBEntry();
-	    wekaEntry.setDataSet(arffName);
-	    if(eval!=null) {
-		    wekaEntry.setNumReleaseTraining(numReleaseTraining-1);
-		    wekaEntry.setClassifier(classifierName);
-		    wekaEntry.setAuc(eval.areaUnderROC(1));
-		    wekaEntry.setKappa(eval.kappa());
-		    wekaEntry.setPrecision(eval.precision(1));
-		    wekaEntry.setRecall(eval.recall(1));
-		    wekaEntry.setBalancing("None");
-		    wekaEntry.setPercentageDataTraining(percentageDataTraining);
-		    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
-		    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
-		    wekaEntry.settP(eval.numTruePositives(1));
-		    wekaEntry.setfP(eval.numFalsePositives(1));
-		    wekaEntry.settN(eval.numTrueNegatives(1));
-		    wekaEntry.setfN(eval.numFalseNegatives(1));
-	    }
-
-	    
-	    if(fS.equals(FEATURE_SELECTION_YES)) {
-	    	 wekaEntry.setFeatureSelection("BestFirst");
-	    }else if(fS.equals(FEATURE_SELECTION_NO)) {
-	    	 wekaEntry.setFeatureSelection("None");
-	    }
+		WekaDBEntry wekaEntry = fillWekaEntry(training , test, classifierName, numReleaseTraining, arffName,fS , eval );
 	   
 	    wekaDBEntries.add(wekaEntry);
 		
@@ -174,6 +193,7 @@ public class TrainClassifiers {
 		Resample resample = new Resample();
 		FilteredClassifier fc = null ;
 		try {
+			
 			resample.setInputFormat(training);
 			
 			fc = new FilteredClassifier();
@@ -216,71 +236,26 @@ public class TrainClassifiers {
 				
 				fc.setFilter(resample);
 			}
+	
+		
+			fc.buildClassifier(training);
+			Evaluation eval = new Evaluation(test);
+			eval.evaluateModel(fc, test); //sampled
+		
+		
+			WekaDBEntry wekaEntry = fillWekaEntry(training , test, classifier, numReleaseTraining, arffName,fS , eval );
+			   
+		    wekaDBEntries.add(wekaEntry);
+		    
 		} catch (Exception e) {
 			
-			Log.errorLog("Error while creating classifier \n");
-	        StringWriter sw = new StringWriter();
-	        PrintWriter pw = new PrintWriter(sw);
-	        e.printStackTrace(pw);
-	        Log.errorLog(sw.toString());
+			registerExceptionOnLog( e, "Error while sampling ! \n" );
+			
 		}
-
-		
-		
-		Evaluation eval = null;
-		
-		try {
-			fc.buildClassifier(training);
-			eval = new Evaluation(test);
-			eval.evaluateModel(fc, test); //sampled
-		} catch (Exception e) {
-			Log.errorLog("Error in classifier evaluation \n");
-	        StringWriter sw = new StringWriter();
-	        PrintWriter pw = new PrintWriter(sw);
-	        e.printStackTrace(pw);
-	        Log.errorLog(sw.toString());
-		}	
-		
-		
-		
-		int trainingSize = training.size();
-		int testSize = test.size();
-		int percentageDataTraining = (trainingSize*100)/dataSetDimension;
-		
-		int positiveInstancesTraining = calculateBuggyClassNumber(training);
-		int percentageDefectiveTraining = (positiveInstancesTraining*100)/trainingSize;
-		
-		int positiveInstancesTest = calculateBuggyClassNumber(test);
-		int percentageDefectiveTest = (positiveInstancesTest*100)/testSize;
-		
-	    WekaDBEntry wekaEntry = new WekaDBEntry();
-	    wekaEntry.setDataSet(arffName);
-	    wekaEntry.setNumReleaseTraining(numReleaseTraining-1);
-	    wekaEntry.setClassifier(classifier);
-	    if(eval!=null) {
-	    	wekaEntry.setAuc(eval.areaUnderROC(1));
-		    wekaEntry.setKappa(eval.kappa());
-		    wekaEntry.setPrecision(eval.precision(1));
-		    wekaEntry.setRecall(eval.recall(1));
-		    wekaEntry.setBalancing(balancingMode);
-		    wekaEntry.setPercentageDataTraining(percentageDataTraining);
-		    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
-		    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
-		    wekaEntry.settP(eval.numTruePositives(1));
-		    wekaEntry.setfP(eval.numFalsePositives(1));
-		    wekaEntry.settN(eval.numTrueNegatives(1));
-		    wekaEntry.setfN(eval.numFalseNegatives(1));
-	    }
-	    
-	    if(fS.equals(FEATURE_SELECTION_YES)) {
-	    	 wekaEntry.setFeatureSelection("BestFirst");
-	    }else if(fS.equals(FEATURE_SELECTION_NO)) {
-	    	 wekaEntry.setFeatureSelection("None");
-	    }
-	   
-	    wekaDBEntries.add(wekaEntry);
-		
 	}
+	
+	
+	
 	
 	public static void createCsvClassifiersMetrics(String projName,String csvName,List<WekaDBEntry> wekaDBEntries) {
 		
@@ -337,12 +312,8 @@ public class TrainClassifiers {
 	               
 	         } catch (Exception e) {
 
-	            Log.errorLog("Error in translating data in csv form \n");
-		        StringWriter sw = new StringWriter();
-		        PrintWriter pw = new PrintWriter(sw);
-		        e.printStackTrace(pw);
-		        Log.errorLog(sw.toString());
-		        
+	        	 registerExceptionOnLog( e, "Error in translating data in csv form \n" );
+	        	 
 	         }
 	}
 	
@@ -381,14 +352,11 @@ public class TrainClassifiers {
 		try {
 			source1 = new DataSource(arffName);
 			dataSet = source1.getDataSet();
+			
 		}catch (Exception e) {
-
-            Log.errorLog("Error in csv writer \n");
-	        StringWriter sw = new StringWriter();
-	        PrintWriter pw = new PrintWriter(sw);
-	        e.printStackTrace(pw);
-	        Log.errorLog(sw.toString());
-	        
+			
+			 registerExceptionOnLog( e, "Error in csv writer \n" );
+     
          }
 	    
 	    dataSetDimension = dataSet.size();
@@ -581,11 +549,7 @@ public class TrainClassifiers {
 		    
 		   }catch (Exception e) {
 
-	            Log.errorLog("Error in trainig the damned classifiers \n");
-		        StringWriter sw = new StringWriter();
-		        PrintWriter pw = new PrintWriter(sw);
-		        e.printStackTrace(pw);
-		        Log.errorLog(sw.toString());
+			   registerExceptionOnLog( e, "Error in trainig the damned classifiers \n" );
 		        
 	         }  
 		    
