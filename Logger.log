@@ -10328,3 +10328,102 @@
   <message>gestione degli alias di ogni file terminata 
 </message>
 </record>
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2020-08-24T20:20:22</date>
+  <millis>1598293222492</millis>
+  <sequence>0</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo della bugginess dei file del progetto 
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:23</date>
+  <millis>1598293223771</millis>
+  <sequence>1</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio scrittura del file csv relativo alle metriche dei ticket 
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:23</date>
+  <millis>1598293223772</millis>
+  <sequence>2</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Scrittura del file delle metriche dei ticket completata con successo 
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:23</date>
+  <millis>1598293223773</millis>
+  <sequence>3</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>E' stato creato con successo il relativo file csv : BookkeeperTicketMetrics.csv
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:23</date>
+  <millis>1598293223774</millis>
+  <sequence>4</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Inizio calcolo delle metriche relative alla bugginess 
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:29</date>
+  <millis>1598293229361</millis>
+  <sequence>5</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>calcolo dei file presenti in ogni release terminato 
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:29</date>
+  <millis>1598293229362</millis>
+  <sequence>6</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>Numero totale dei files : 5708
+</message>
+</record>
+<record>
+  <date>2020-08-24T20:20:30</date>
+  <millis>1598293230918</millis>
+  <sequence>7</sequence>
+  <logger>global</logger>
+  <level>INFO</level>
+  <class>logic.Log</class>
+  <method>infoLog</method>
+  <thread>1</thread>
+  <message>gestione degli alias di ogni file terminata 
+</message>
+</record>

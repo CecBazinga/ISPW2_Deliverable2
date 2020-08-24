@@ -118,7 +118,6 @@ public class TrainClassifiers {
 	   
 	    wekaDBEntries.add(wekaEntry);
 		
-	    System.out.println(eval.toMatrixString("=== Overall Confusion Matrix ===\n"));
 	}
 	
 	public static void applySampling(Instances training , Instances test, String classifier, String balancingMode,String arffName,
@@ -211,7 +210,6 @@ public class TrainClassifiers {
 	   
 	    wekaDBEntries.add(wekaEntry);
 		
-	    System.out.println(eval.toMatrixString("=== Overall Confusion Matrix ===\n"));
 	}
 	
 	public static void createCsvClassifiersMetrics(String projName,String csvName,List<WekaDBEntry> wekaDBEntries) {

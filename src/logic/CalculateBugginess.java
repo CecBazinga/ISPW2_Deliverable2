@@ -1217,27 +1217,22 @@ public class CalculateBugginess {
 	
 	public static void setBuggyFiles(List<DBEntry> dBEntries,List<FileAlias> filesAlias,List<RevCommit> commitList,List<Ticket> tickets,Git git) throws IOException {
 		
-		System.out.println(tickets.size());
-		
 		for(Ticket t : tickets) {
 			
-			System.out.println("Sto lavorando con il ticket : "+ t.getKey()+"\n");
 			if(!t.getAffectedVersions().isEmpty()) {
 				
 				List<RevCommit> fixedCommits = new ArrayList<>();
 				
 				retrieveAndSortCommitsForTicket(t,commitList,fixedCommits);
-				System.out.println("Step 1 \n");
 				
 				if(!fixedCommits.isEmpty()) {
 						
 					for(int i=0;i<fixedCommits.size();i++) {
 						
-						System.out.println("Step 2 \n");
 						List<DiffEntry> entries = calculateDiffEntries(fixedCommits.get(i), git);
-						System.out.println("Step 3 \n");
+			
 						for(AffectedVersion av : t.getAffectedVersions()) {
-							System.out.println("Step 4 \n");
+							
 							setEntryBugginess(av, entries, dBEntries, filesAlias);
 						}
 					}

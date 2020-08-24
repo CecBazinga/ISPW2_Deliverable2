@@ -11,25 +11,14 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		//String projName = "Bookkeeper" ;
-		String projName = "OpenJPA" ;
+		String projName = "Bookkeeper" ;
+		
 		
 		String path ="C:\\Users\\Utente\\Desktop\\ISPW2\\Falessi\\progetti\\"+projName;
 		
 		Log.setupLogger();
 		int releasesSize = 0;
 		
-		try {
-			EvaluateFixedBugs.evaluate(projName,path);
-			
-		} catch (IOException | JSONException | GitAPIException e) {
-			
-			Log.errorLog("Error while calculating fixed bugs per month \n");
-	        StringWriter sw = new StringWriter();
-	        PrintWriter pw = new PrintWriter(sw);
-	        e.printStackTrace(pw);
-	        Log.errorLog(sw.toString());
-		}
 		
 		try {
 			

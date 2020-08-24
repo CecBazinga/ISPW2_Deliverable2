@@ -11,14 +11,12 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2/java-json.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2/opencsv-5.1.jar"/>
-	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2/weka-stable-3.8.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2/SMOTE.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/java-json.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/opencsv-5.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/org.eclipse.jgit-5.7.0.202003110725-r.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/slf4j-api-1.7.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/slf4j-jdk14-1.7.5.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/SMOTE.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Utente/Desktop/ISPW2/Falessi/progetti/ISPW2_Deliverable2/jar/weka-stable-3.8.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
