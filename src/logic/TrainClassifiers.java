@@ -2,6 +2,7 @@ package logic;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -339,7 +340,7 @@ public class TrainClassifiers {
 	               
 	         } catch (Exception e) {
 
-	            Log.errorLog("Error in csv writer \n");
+	            Log.errorLog("Error in translating data in csv form \n");
 		        StringWriter sw = new StringWriter();
 		        PrintWriter pw = new PrintWriter(sw);
 		        e.printStackTrace(pw);
@@ -351,7 +352,7 @@ public class TrainClassifiers {
 	
 	
 	
-	public static void train(String projName,int releasesSize) throws Exception {
+	public static void train(String projName,int releasesSize) throws IOException    {
 		
 		Log.infoLog("Trasformazione del dataset da csv in arff... \n");
 		
@@ -377,8 +378,22 @@ public class TrainClassifiers {
 	  
 	    
 	    //WalkForrward implementation
-	    DataSource source1 = new DataSource(arffName);
-	    Instances dataSet = source1.getDataSet();
+	    DataSource source1;
+	    Instances dataSet = null;
+	    
+		try {
+			source1 = new DataSource(arffName);
+			dataSet = source1.getDataSet();
+		}catch (Exception e) {
+
+            Log.errorLog("Error in csv writer \n");
+	        StringWriter sw = new StringWriter();
+	        PrintWriter pw = new PrintWriter(sw);
+	        e.printStackTrace(pw);
+	        Log.errorLog(sw.toString());
+	        
+         }
+	    
 	    dataSetDimension = dataSet.size();
 	  
 	  
@@ -471,6 +486,8 @@ public class TrainClassifiers {
 		   
 		   /* Addestro i solutori applicando come tecnica di feature selection best first
 		    */
+		   try {
+			   
 		   
 		    //create AttributeSelection object
 			AttributeSelection filter = new AttributeSelection();
@@ -483,10 +500,16 @@ public class TrainClassifiers {
 			filter.setEvaluator(eval);
 			filter.setSearch(search);
 			//specify the dataset
+			Instances filteredTraining = null;
+			Instances testingFiltered = null;
+			
 			filter.setInputFormat(training);
 			//apply
-			Instances filteredTraining = Filter.useFilter(training, filter);
-			Instances testingFiltered = Filter.useFilter(test, filter);
+			filteredTraining = Filter.useFilter(training, filter);
+			testingFiltered = Filter.useFilter(test, filter);
+			
+
+	    
 			int numAttrFiltered = filteredTraining.numAttributes();
 			filteredTraining.setClassIndex(numAttrFiltered - 1);
 			testingFiltered.setClassIndex(numAttrFiltered - 1);
@@ -559,6 +582,15 @@ public class TrainClassifiers {
 		    	}
 		    }
 		    
+		   }catch (Exception e) {
+
+	            Log.errorLog("Error in trainig the damned classifiers \n");
+		        StringWriter sw = new StringWriter();
+		        PrintWriter pw = new PrintWriter(sw);
+		        e.printStackTrace(pw);
+		        Log.errorLog(sw.toString());
+		        
+	         }  
 		    
 	    }
 	    
