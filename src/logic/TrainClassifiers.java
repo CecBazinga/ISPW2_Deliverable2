@@ -10,6 +10,7 @@ import java.util.List;
 
 import weka.attributeSelection.CfsSubsetEval;
 import weka.attributeSelection.GreedyStepwise;
+import weka.classifiers.AbstractClassifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
@@ -56,55 +57,51 @@ public class TrainClassifiers {
 		return positiveInstances;
 	}
 	
+	
+	
 	public static void evaluateClassifier(Instances training , Instances test,String classifierName,
 									int numReleaseTraining,String arffName,String fS)    {
 		
 		Evaluation eval = null;
+		AbstractClassifier classifier = null ;
 		
-		if(classifierName.equals(RANDOM_FOREST)) {
-			 RandomForest classifier = new RandomForest();
-			 try {
-			 classifier.buildClassifier(training);
+		try {
+			
+			if(classifierName.equals(RANDOM_FOREST)) {
+				
+				 classifier = new RandomForest();
+				 
+				
+			}else if(classifierName.equals(NAIVE_BAYES)){
+				
+				 classifier = new NaiveBayes();
+				
+				
+				 
+			}else if(classifierName.equals(IBK)) {
+				
+				 classifier = new IBk();
+				 
+				
+			}else {
+				
+				Log.errorLog("Inserire una stringa valida come classificatore : NaiveBayes, RandomForest, IBk . \n");
+				System.exit(1);
+				
+			} 
+			
+			classifier.buildClassifier(training);
 			 eval = new Evaluation(test);	
 			 eval.evaluateModel(classifier, test);
-			 }catch(Exception e) {
-				Log.errorLog("Error while creating RandomForest classifier \n");
-		        StringWriter sw = new StringWriter();
-		        PrintWriter pw = new PrintWriter(sw);
-		        e.printStackTrace(pw);
-		        Log.errorLog(sw.toString());
-			 }
-		}else if(classifierName.equals(NAIVE_BAYES)){
-			 NaiveBayes classifier = new NaiveBayes();
-			 try {
-				 classifier.buildClassifier(training);
-				 eval = new Evaluation(test);	
-				 eval.evaluateModel(classifier, test);
-			 }catch(Exception e) {
-					Log.errorLog("Error while creating NaiveBayes classifier \n");
-			        StringWriter sw = new StringWriter();
-			        PrintWriter pw = new PrintWriter(sw);
-			        e.printStackTrace(pw);
-			        Log.errorLog(sw.toString());
-			 }
-		}else if(classifierName.equals(IBK)) {
-			 IBk classifier = new IBk();
-			 try {
-				 classifier.buildClassifier(training);
-				 eval = new Evaluation(test);	
-				 eval.evaluateModel(classifier, test);
-			 }catch(Exception e) {
-					Log.errorLog("Error while creating IBK classifier \n");
-			        StringWriter sw = new StringWriter();
-			        PrintWriter pw = new PrintWriter(sw);
-			        e.printStackTrace(pw);
-			        Log.errorLog(sw.toString());
-			 }
-		}else {
+			 
+		}catch(Exception e) {
 			
-			Log.errorLog("Inserire una stringa valida come classificatore : NaiveBayes, RandomForest, IBk . \n");
-			System.exit(1);
-		}
+			Log.errorLog("Error while creating classifier \n");
+	        StringWriter sw = new StringWriter();
+	        PrintWriter pw = new PrintWriter(sw);
+	        e.printStackTrace(pw);
+	        Log.errorLog(sw.toString());
+	 }
 		
 		int trainingSize = training.size();
 		int testSize = test.size();
