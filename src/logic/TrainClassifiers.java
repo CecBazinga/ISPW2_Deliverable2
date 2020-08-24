@@ -56,47 +56,49 @@ public class TrainClassifiers {
 	}
 	
 	public static void evaluateClassifier(Instances training , Instances test,String classifierName,
-									int numReleaseTraining,String arffName,String fS)     {
+									int numReleaseTraining,String arffName,String fS)    {
 		
 		Evaluation eval = null;
 		
 		if(classifierName.equals(RANDOM_FOREST)) {
-			
 			 RandomForest classifier = new RandomForest();
-			 
 			 try {
-				classifier.buildClassifier(training);
-				eval = new Evaluation(test);	
-				eval.evaluateModel(classifier, test);
-			} catch (Exception e) {
-				
-				e.printStackTrace();
-			}
-			
+			 classifier.buildClassifier(training);
+			 eval = new Evaluation(test);	
+			 eval.evaluateModel(classifier, test);
+			 }catch(Exception e) {
+				Log.errorLog("Error while creating RandomForest classifier \n");
+		        StringWriter sw = new StringWriter();
+		        PrintWriter pw = new PrintWriter(sw);
+		        e.printStackTrace(pw);
+		        Log.errorLog(sw.toString());
+			 }
 		}else if(classifierName.equals(NAIVE_BAYES)){
-			
 			 NaiveBayes classifier = new NaiveBayes();
-			 
 			 try {
 				 classifier.buildClassifier(training);
 				 eval = new Evaluation(test);	
 				 eval.evaluateModel(classifier, test);
-				} catch (Exception e) {
-					
-					e.printStackTrace();
-				}
-			 
+			 }catch(Exception e) {
+					Log.errorLog("Error while creating NaiveBayes classifier \n");
+			        StringWriter sw = new StringWriter();
+			        PrintWriter pw = new PrintWriter(sw);
+			        e.printStackTrace(pw);
+			        Log.errorLog(sw.toString());
+			 }
 		}else if(classifierName.equals(IBK)) {
 			 IBk classifier = new IBk();
-
 			 try {
 				 classifier.buildClassifier(training);
 				 eval = new Evaluation(test);	
 				 eval.evaluateModel(classifier, test);
-				} catch (Exception e) {
-					
-					e.printStackTrace();
-				}
+			 }catch(Exception e) {
+					Log.errorLog("Error while creating IBK classifier \n");
+			        StringWriter sw = new StringWriter();
+			        PrintWriter pw = new PrintWriter(sw);
+			        e.printStackTrace(pw);
+			        Log.errorLog(sw.toString());
+			 }
 		}else {
 			
 			Log.errorLog("Inserire una stringa valida come classificatore : NaiveBayes, RandomForest, IBk . \n");
@@ -116,20 +118,22 @@ public class TrainClassifiers {
 		
 	    WekaDBEntry wekaEntry = new WekaDBEntry();
 	    wekaEntry.setDataSet(arffName);
-	    wekaEntry.setNumReleaseTraining(numReleaseTraining-1);
-	    wekaEntry.setClassifier(classifierName);
-	    wekaEntry.setAuc(eval.areaUnderROC(1));
-	    wekaEntry.setKappa(eval.kappa());
-	    wekaEntry.setPrecision(eval.precision(1));
-	    wekaEntry.setRecall(eval.recall(1));
-	    wekaEntry.setBalancing("None");
-	    wekaEntry.setPercentageDataTraining(percentageDataTraining);
-	    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
-	    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
-	    wekaEntry.settP(eval.numTruePositives(1));
-	    wekaEntry.setfP(eval.numFalsePositives(1));
-	    wekaEntry.settN(eval.numTrueNegatives(1));
-	    wekaEntry.setfN(eval.numFalseNegatives(1));
+	    if(eval!=null) {
+		    wekaEntry.setNumReleaseTraining(numReleaseTraining-1);
+		    wekaEntry.setClassifier(classifierName);
+		    wekaEntry.setAuc(eval.areaUnderROC(1));
+		    wekaEntry.setKappa(eval.kappa());
+		    wekaEntry.setPrecision(eval.precision(1));
+		    wekaEntry.setRecall(eval.recall(1));
+		    wekaEntry.setBalancing("None");
+		    wekaEntry.setPercentageDataTraining(percentageDataTraining);
+		    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
+		    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
+		    wekaEntry.settP(eval.numTruePositives(1));
+		    wekaEntry.setfP(eval.numFalsePositives(1));
+		    wekaEntry.settN(eval.numTrueNegatives(1));
+		    wekaEntry.setfN(eval.numFalseNegatives(1));
+	    }
 
 	    
 	    if(fS.equals(FEATURE_SELECTION_YES)) {
@@ -142,59 +146,103 @@ public class TrainClassifiers {
 		
 	}
 	
-	public static void applySampling(Instances training , Instances test, String classifier, String balancingMode,String arffName,
-										String fS,int numReleaseTraining) throws Exception {
+	
+	
+	
+	
+	public static double calculatePercentage(int positiveInstances, int totInstances) {
 		
-		Resample resample = new Resample();
-		resample.setInputFormat(training);
-		FilteredClassifier fc = new FilteredClassifier();
-
-		if(classifier.equals(RANDOM_FOREST)) {
-			RandomForest classifierForest = new RandomForest();
-			fc.setClassifier(classifierForest);
-		}else if(classifier.equals(NAIVE_BAYES)){
-			NaiveBayes classifierBayes = new NaiveBayes();
-			fc.setClassifier(classifierBayes);
-		}else if(classifier.equals(IBK)) {
-			IBk classifierIBk = new IBk();
-			fc.setClassifier(classifierIBk);
+		double percentage = 0;
+		
+		if(positiveInstances > (totInstances-positiveInstances)) {
+			
+			percentage = (positiveInstances*100)/(double) totInstances;
 		}else {
 			
-			Log.errorLog("Inserire una stringa valida come classificatore : NaiveBayes, RandomForest, IBk . \n");
-			System.exit(1);
+			percentage = ((totInstances-positiveInstances)*100)/(double) totInstances;
 		}
 		
-		if(balancingMode.equals(UNDER_SAMPLING)) {
-			SpreadSubsample  spreadSubsample = new SpreadSubsample();
-			String[] opts = new String[]{ "-M", "1.0"};
-			spreadSubsample.setOptions(opts);
-			fc.setFilter(spreadSubsample);
-		}else if(balancingMode.equals(SMOTE)){
-			weka.filters.supervised.instance.SMOTE smote = new weka.filters.supervised.instance.SMOTE();
-			smote.setInputFormat(training);
-			fc.setFilter(smote);
-		}else if(balancingMode.equals(OVER_SAMPLING)){
+		return percentage;
+	}
+	
+	
+	
+	
+	
+	
+	public static void applySampling(Instances training , Instances test, String classifier, String balancingMode,String arffName,
+										String fS,int numReleaseTraining) {
+		
+		Resample resample = new Resample();
+		FilteredClassifier fc = null ;
+		try {
+			resample.setInputFormat(training);
 			
-			int totInstances = training.size();
-			int positiveInstances = calculateBuggyClassNumber(training);
-			
-			double percentage = 0;
-			if(positiveInstances > (totInstances-positiveInstances)) {
-				
-				percentage = (positiveInstances*100)/(double) totInstances;
-			}else {
-				
-				percentage = ((totInstances-positiveInstances)*100)/(double) totInstances;
+			fc = new FilteredClassifier();
+	
+			if(classifier.equals(RANDOM_FOREST)) {
+				RandomForest classifierForest = new RandomForest();
+				fc.setClassifier(classifierForest);
+			}else if(classifier.equals(NAIVE_BAYES)){
+				NaiveBayes classifierBayes = new NaiveBayes();
+				fc.setClassifier(classifierBayes);
+			}else if(classifier.equals(IBK)) {
+				IBk classifierIBk = new IBk();
+				fc.setClassifier(classifierIBk);
 			}
-			String[] optsOverSampling = new String[]{"-B", "1.0", "-Z", String.valueOf(2*percentage)};
-			resample.setOptions(optsOverSampling);
-			fc.setFilter(resample);
+			
+			if(balancingMode.equals(UNDER_SAMPLING)) {
+				SpreadSubsample  spreadSubsample = new SpreadSubsample();
+				String[] opts = new String[]{ "-M", "1.0"};
+				
+				spreadSubsample.setOptions(opts);
+				
+				fc.setFilter(spreadSubsample);
+			}else if(balancingMode.equals(SMOTE)){
+				weka.filters.supervised.instance.SMOTE smote = new weka.filters.supervised.instance.SMOTE();
+				
+				smote.setInputFormat(training);
+				
+				fc.setFilter(smote);
+			}else if(balancingMode.equals(OVER_SAMPLING)){
+				
+				int totInstances = training.size();
+				int positiveInstances = calculateBuggyClassNumber(training);
+				
+				
+				double percentage =  calculatePercentage(positiveInstances, totInstances);
+				
+				String[] optsOverSampling = new String[]{"-B", "1.0", "-Z", String.valueOf(2*percentage)};
+				
+				resample.setOptions(optsOverSampling);
+				
+				fc.setFilter(resample);
+			}
+		} catch (Exception e) {
+			
+			Log.errorLog("Error while creating classifier \n");
+	        StringWriter sw = new StringWriter();
+	        PrintWriter pw = new PrintWriter(sw);
+	        e.printStackTrace(pw);
+	        Log.errorLog(sw.toString());
 		}
 
 		
-		fc.buildClassifier(training);
-		Evaluation eval = new Evaluation(test);	
-		eval.evaluateModel(fc, test); //sampled
+		
+		Evaluation eval = null;
+		
+		try {
+			fc.buildClassifier(training);
+			eval = new Evaluation(test);
+			eval.evaluateModel(fc, test); //sampled
+		} catch (Exception e) {
+			Log.errorLog("Error in classifier evaluation \n");
+	        StringWriter sw = new StringWriter();
+	        PrintWriter pw = new PrintWriter(sw);
+	        e.printStackTrace(pw);
+	        Log.errorLog(sw.toString());
+		}	
+		
 		
 		
 		int trainingSize = training.size();
@@ -211,18 +259,20 @@ public class TrainClassifiers {
 	    wekaEntry.setDataSet(arffName);
 	    wekaEntry.setNumReleaseTraining(numReleaseTraining-1);
 	    wekaEntry.setClassifier(classifier);
-	    wekaEntry.setAuc(eval.areaUnderROC(1));
-	    wekaEntry.setKappa(eval.kappa());
-	    wekaEntry.setPrecision(eval.precision(1));
-	    wekaEntry.setRecall(eval.recall(1));
-	    wekaEntry.setBalancing(balancingMode);
-	    wekaEntry.setPercentageDataTraining(percentageDataTraining);
-	    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
-	    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
-	    wekaEntry.settP(eval.numTruePositives(1));
-	    wekaEntry.setfP(eval.numFalsePositives(1));
-	    wekaEntry.settN(eval.numTrueNegatives(1));
-	    wekaEntry.setfN(eval.numFalseNegatives(1));
+	    if(eval!=null) {
+	    	wekaEntry.setAuc(eval.areaUnderROC(1));
+		    wekaEntry.setKappa(eval.kappa());
+		    wekaEntry.setPrecision(eval.precision(1));
+		    wekaEntry.setRecall(eval.recall(1));
+		    wekaEntry.setBalancing(balancingMode);
+		    wekaEntry.setPercentageDataTraining(percentageDataTraining);
+		    wekaEntry.setPercentageDefectiveTraining(percentageDefectiveTraining);
+		    wekaEntry.setPercentageDefectiveTest(percentageDefectiveTest);
+		    wekaEntry.settP(eval.numTruePositives(1));
+		    wekaEntry.setfP(eval.numFalsePositives(1));
+		    wekaEntry.settN(eval.numTrueNegatives(1));
+		    wekaEntry.setfN(eval.numFalseNegatives(1));
+	    }
 	    
 	    if(fS.equals(FEATURE_SELECTION_YES)) {
 	    	 wekaEntry.setFeatureSelection("BestFirst");
