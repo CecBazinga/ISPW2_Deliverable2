@@ -56,25 +56,47 @@ public class TrainClassifiers {
 	}
 	
 	public static void evaluateClassifier(Instances training , Instances test,String classifierName,
-									int numReleaseTraining,String arffName,String fS) throws Exception  {
+									int numReleaseTraining,String arffName,String fS)     {
 		
 		Evaluation eval = null;
 		
 		if(classifierName.equals(RANDOM_FOREST)) {
+			
 			 RandomForest classifier = new RandomForest();
-			 classifier.buildClassifier(training);
-			 eval = new Evaluation(test);	
-			 eval.evaluateModel(classifier, test);
+			 
+			 try {
+				classifier.buildClassifier(training);
+				eval = new Evaluation(test);	
+				eval.evaluateModel(classifier, test);
+			} catch (Exception e) {
+				
+				e.printStackTrace();
+			}
+			
 		}else if(classifierName.equals(NAIVE_BAYES)){
+			
 			 NaiveBayes classifier = new NaiveBayes();
-			 classifier.buildClassifier(training);
-			 eval = new Evaluation(test);	
-			 eval.evaluateModel(classifier, test);
+			 
+			 try {
+				 classifier.buildClassifier(training);
+				 eval = new Evaluation(test);	
+				 eval.evaluateModel(classifier, test);
+				} catch (Exception e) {
+					
+					e.printStackTrace();
+				}
+			 
 		}else if(classifierName.equals(IBK)) {
 			 IBk classifier = new IBk();
-			 classifier.buildClassifier(training);
-			 eval = new Evaluation(test);	
-			 eval.evaluateModel(classifier, test);
+
+			 try {
+				 classifier.buildClassifier(training);
+				 eval = new Evaluation(test);	
+				 eval.evaluateModel(classifier, test);
+				} catch (Exception e) {
+					
+					e.printStackTrace();
+				}
 		}else {
 			
 			Log.errorLog("Inserire una stringa valida come classificatore : NaiveBayes, RandomForest, IBk . \n");
