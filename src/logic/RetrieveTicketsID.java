@@ -15,6 +15,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import entity.AffectedVersion;
+import entity.Ticket;
+
 import org.json.JSONArray;
 
 

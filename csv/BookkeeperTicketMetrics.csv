@@ -1,2 +1,18 @@
-totalTickets , ticketsWithAV , ticketsWithoutAV , invalidTickets , AVInvalidTickets  , invalidTicketsWithoutAV , ticketsWithoutFixedVersion  , AVticketsWithoutFixedVersion , ticketsWithoutFixedVersionWithoutAV , ticketsWithoutOpeningVersion , AVticketsWithoutOpeningVersionticketsWithoutOpeningVersionWithoutAV , ticketWithFVEqualsToOV , AVticketWithFVEqualsToOV , ticketWithFVEqualsToOVWithoutAV , ticketsWithoutInjectionVersion , AVticketsWithoutInjectionVersion , ticketsWithoutInjectionVersionWithoutAV 
-435,170,265,18,18,0,0,0,0,0,0,0,376,146,230,0,0,0,0
+totalTickets ;435
+ ticketsWithAV ;170
+ ticketsWithoutAV ;265
+ invalidTickets ;18
+ AVInvalidTickets  ;18
+ invalidTicketsWithoutAV ;0
+ ticketsWithoutFixedVersion  ;0
+ AVticketsWithoutFixedVersion ;0
+ ticketsWithoutFixedVersionWithoutAV ;0
+ ticketsWithoutOpeningVersion ;0
+ AVticketsWithoutOpeningVersion ;0
+ticketsWithoutOpeningVersionWithoutAV;0
+ ticketWithFVEqualsToOV ;376
+ AVticketWithFVEqualsToOV ;146
+ ticketWithFVEqualsToOVWithoutAV ;230
+ ticketsWithoutInjectionVersion ;0
+ AVticketsWithoutInjectionVersion ;0
+ ticketsWithoutInjectionVersionWithoutAV ;0

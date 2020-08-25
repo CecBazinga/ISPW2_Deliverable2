@@ -33,6 +33,13 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.json.JSONException;
 
+import entity.AffectedVersion;
+import entity.DBEntry;
+import entity.FileAlias;
+import entity.FileNameAndSize;
+import entity.Release;
+import entity.Ticket;
+
 
 
 

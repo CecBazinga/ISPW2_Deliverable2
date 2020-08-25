@@ -1,4 +1,4 @@
-package logic;
+package entity;
 
 import java.io.File;
 

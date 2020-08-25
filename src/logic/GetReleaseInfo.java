@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import entity.Release;
+
 import org.json.JSONArray;
 import java.nio.charset.StandardCharsets;
 
